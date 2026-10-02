@@ -1,5 +1,5 @@
 {
-  "model": "gemini-flash-latest",
+  "model": "gemini-3.8-flash",
   "candidate_prompt": "prompts/candidate_prompt.md",
   "production_prompt": "prompts/production_prompt.md",
   "production_metrics": "prompts/production_metrics.json",
