@@ -9,7 +9,8 @@ permissions:
 
 jobs:
   export:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
@@ -19,10 +20,13 @@ jobs:
       - run: python export.py
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-      - name: Commit export
+      - run: python judge.py
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      - name: Commit results
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add exports/
-          git diff --cached --quiet || git commit -m "Daily export $(date -u +%F)"
+          git add exports/ metrics_history.csv
+          git diff --cached --quiet || git commit -m "Daily export and judge run $(date -u +%F)"
           git push
