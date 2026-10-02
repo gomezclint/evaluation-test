@@ -2,10 +2,10 @@ name: Prompt regression test
 on:
   push:
     paths:
-      - "prompts/candidate_prompt.md"
-      - "prompts/style_guide_de.md"
-      - "golden/**"
-      - "eval_config.json"
+      - "business-risk/prompts/candidate_prompt.md"
+      - "business-risk/prompts/style_guide_de.md"
+      - "business-risk/golden/**"
+      - "business-risk/eval_config.json"
   workflow_dispatch:
 
 permissions:
@@ -19,12 +19,15 @@ jobs:
   regression:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: business-risk
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
-      - run: pip install -r requirements.txt
+      - run: pip install -r ../requirements.txt
       - name: Test candidate prompt (promotes it if every check passes)
         run: python eval_prompt.py --promote
         env:
