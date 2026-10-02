@@ -1,0 +1,2 @@
+date,segments,accuracy,macro_f1,no_error_precision,no_error_recall,no_error_f1,minor_precision,minor_recall,minor_f1,major_precision,major_recall,major_f1
+2026-10-02,10,0.50,0.26,1.00,0.62,0.77,0.00,0.00,0.00,0.00,0.00,0.00
