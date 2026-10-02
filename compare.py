@@ -1,5 +1,5 @@
 """Step 3: Compare the LLM judge's labels with the human annotations and calculate metrics.
-Outputs: exports/<date>_judge_comparison.csv, metrics_history.csv, and the run's summary page."""
+Outputs: comparisons/<date>_judge_comparison.csv, comparisons/metrics_history.csv, and the run's summary page."""
 import csv, os, sys
 from datetime import date
 from pathlib import Path
@@ -24,20 +24,23 @@ def safe_div(a, b):
     return a / b if b else 0.0
 
 
-for name in (f"{today}_mqm_error_spans.csv", f"{today}_judge_labels.csv"):
-    if not (Path("exports") / name).exists():
-        sys.exit(f"Missing exports/{name}. Run the daily export first, or pick a date that has both files.")
+HUMAN_FILE = Path("exports") / f"{today}_mqm_error_spans.csv"
+JUDGE_FILE = Path("judge_labels") / f"{today}_judge_labels.csv"
+OUT_DIR = Path("comparisons")
+for path in (HUMAN_FILE, JUDGE_FILE):
+    if not path.exists():
+        sys.exit(f"Missing {path}. Run the daily export first, or pick a date that has both files.")
 
 # 1. Load the human annotations, grouped by translation
 human = {}
-with (Path("exports") / f"{today}_mqm_error_spans.csv").open(encoding="utf-8") as f:
+with HUMAN_FILE.open(encoding="utf-8") as f:
     for row in csv.DictReader(f):
         errs = human.setdefault((row["source_en"], row["translation_de"]), [])
         if row["severity"] != "no error":
             errs.append((row["error_text"], row["severity"].lower()))
 
 # 2. Load the judge's labels
-with (Path("exports") / f"{today}_judge_labels.csv").open(encoding="utf-8") as f:
+with JUDGE_FILE.open(encoding="utf-8") as f:
     judge = {(r["source_en"], r["translation_de"]): r for r in csv.DictReader(f)}
 
 # 3. Match them up (only translations both sides labeled)
@@ -73,7 +76,8 @@ for label in LABELS:
 macro_f1 = sum(m["f1"] for m in per_label.values()) / len(LABELS)
 
 # 5. Save the side-by-side comparison
-out = Path("exports") / f"{today}_judge_comparison.csv"
+OUT_DIR.mkdir(exist_ok=True)
+out = OUT_DIR / f"{today}_judge_comparison.csv"
 with out.open("w", newline="", encoding="utf-8") as f:
     writer = csv.DictWriter(f, fieldnames=results[0].keys())
     writer.writeheader()
@@ -89,7 +93,7 @@ for label in LABELS:
     m = per_label[label]
     row += [f"{m['precision']:.2f}", f"{m['recall']:.2f}", f"{m['f1']:.2f}"]
 
-history = Path("metrics_history.csv")
+history = OUT_DIR / "metrics_history.csv"
 old_rows = []
 if history.exists():
     with history.open(newline="") as f:
