@@ -1,0 +1,33 @@
+name: Compare judge vs human
+on:
+  workflow_run:
+    workflows: ["Daily export"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "Date to compare (YYYY-MM-DD). Leave empty for today."
+        required: false
+
+permissions:
+  contents: write
+
+jobs:
+  compare:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: python compare.py
+        env:
+          RUN_DATE: ${{ github.event.inputs.date }}
+      - name: Commit results
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add exports/ metrics_history.csv
+          git diff --cached --quiet || git commit -m "Judge comparison $(date -u +%F)"
+          git push
