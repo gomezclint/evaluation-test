@@ -1,0 +1,27 @@
+id,source_en,translation_de,critical,category,notes
+C01,Do not use this product on children under 3.,Verwenden Sie dieses Produkt bei Kindern unter 3 Jahren.,yes,safety,Negation dropped
+C02,Your subscription renews automatically at $9.99 per month.,"Ihr Abonnement verlängert sich automatisch zum Preis von 99,99 $ pro Monat.",yes,financial_numeric,Price changed from 9.99 to 99.99
+C03,Refunds are available within 30 days of purchase.,Rückerstattungen sind innerhalb von 3 Tagen nach dem Kauf möglich.,yes,legal_privacy,Refund period changed from 30 to 3 days
+C04,We will never share your personal data with third parties.,Wir geben Ihre personenbezogenen Daten an Dritte weiter.,yes,legal_privacy,Privacy commitment reversed
+C05,Unplug the device before cleaning it.,"Reinigen Sie das Gerät, bevor Sie den Netzstecker ziehen.",yes,safety,Order of safety steps reversed
+C06,Store below 25 °C.,Unter 52 °C lagern.,yes,safety,Storage limit changed from 25 to 52
+C07,"By clicking Accept, you agree to our Terms of Service and Privacy Policy.",Durch Klicken auf „Akzeptieren“ stimmen Sie unseren Nutzungsbedingungen zu.,yes,legal_privacy,Privacy Policy omitted from consent
+C08,"Thanks for your patience, we'll fix this soon.","Danke für Ihre Geduld, wir kümmern uns bald um diesen Mist.",yes,offensive,Profanity added
+C09,Sign in with your NovaPay account.,Melden Sie sich mit Ihrem NeuZahl-Konto an.,yes,brand,Protected brand name translated
+C10,Warning: Contains nuts.,Hinweis: Enthält keine Nüsse.,yes,safety,Allergen information reversed
+C11,The offer ends on 05/10/2026.,Das Angebot endet am 05.10.2026.,yes,financial_numeric,US date May 10 converted to 5 October
+C12,Take one tablet twice daily.,Nehmen Sie zweimal täglich zwei Tabletten ein.,yes,safety,Dosage doubled
+C13,Free shipping on orders over €50.,Kostenloser Versand für alle Bestellungen.,yes,financial_numeric,Minimum order condition dropped
+N01,Your order has shipped.,Ihre Bestellung wurde versandt.,no,none,Correct
+N02,Your password has been changed.,Ihr Passwort wurde geändert worden.,no,none,Grammar error only
+N03,Update your profile to get better recommendations.,"Aktualisiere dein Profil, um bessere Empfehlungen zu erhalten.",no,none,Informal du (style only)
+N04,"Total: €1,250.00","Gesamt: 1250,00 €",no,none,Missing thousands separator; value correct
+N05,"Select ""Settings"" from the menu.","Wählen Sie im Menü ""Einstellungen"" aus.",no,none,Wrong quotation-mark style
+N06,We're excited to have you on board!,"Wir sind aufgeregt, Sie an Bord zu haben!",no,none,Literal and awkward but understandable
+N07,Add the item to your cart.,Legen Sie den Artikel in Ihren Einkaufskorb.,no,none,Terminology deviation (Warenkorb)
+N08,Need help? Contact our support team.,Brauchen Sie Hilfe? Kontaktieren Sie unser Support-Team.,no,none,Correct
+N09,The update will be installed automatically tonight.,Das Update wird heute Nacht automatisch installiert.,no,none,Correct
+N10,Your payment was successful.,Ihre Zahlung war erfolgreicht.,no,none,Typo only
+N11,The event takes place on 03/14/2026.,Die Veranstaltung findet am 14.03.2026 statt.,no,none,Correct date conversion
+N12,Only $4.99 per month.,"Nur 4,99 $ pro Monat.",no,none,Correct price format
+N13,Your NovaPay balance is shown on the home screen.,Ihr NovaPay-Guthaben wird auf dem Startbildschirm angezeigt.,no,none,Correct; brand preserved
