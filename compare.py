@@ -6,7 +6,8 @@ from pathlib import Path
 
 LABELS = ["no error", "minor", "major"]
 RANK = {label: i for i, label in enumerate(LABELS)}
-today = date.today()
+# Date to compare: RUN_DATE (YYYY-MM-DD) if set, otherwise today
+today = os.environ.get("RUN_DATE") or str(date.today())
 
 
 def worst(severities):
@@ -22,6 +23,10 @@ def worst(severities):
 def safe_div(a, b):
     return a / b if b else 0.0
 
+
+for name in (f"{today}_mqm_error_spans.csv", f"{today}_judge_labels.csv"):
+    if not (Path("exports") / name).exists():
+        sys.exit(f"Missing exports/{name}. Run the daily export first, or pick a date that has both files.")
 
 # 1. Load the human annotations, grouped by translation
 human = {}
@@ -51,7 +56,7 @@ for key, j in judge.items():
 
 n = len(results)
 if n == 0:
-    sys.exit("No translations to compare. Check that both files exist for today.")
+    sys.exit(f"No translations to compare. Check that both files exist for {today}.")
 
 # 4. Metrics, treating the human labels as ground truth
 accuracy = sum(r["agree"] for r in results) / n
@@ -74,22 +79,26 @@ with out.open("w", newline="", encoding="utf-8") as f:
     writer.writeheader()
     writer.writerows(results)
 
-# 6. Append today's metrics to a running history
+# 6. Save this date's metrics to the running history (replacing any earlier row for the same date)
+header = ["date", "segments", "accuracy", "macro_f1"]
+for label in LABELS:
+    key = label.replace(" ", "_")
+    header += [f"{key}_precision", f"{key}_recall", f"{key}_f1"]
+row = [today, n, f"{accuracy:.2f}", f"{macro_f1:.2f}"]
+for label in LABELS:
+    m = per_label[label]
+    row += [f"{m['precision']:.2f}", f"{m['recall']:.2f}", f"{m['f1']:.2f}"]
+
 history = Path("metrics_history.csv")
-new_file = not history.exists()
-with history.open("a", newline="") as f:
+old_rows = []
+if history.exists():
+    with history.open(newline="") as f:
+        old_rows = [r for r in list(csv.reader(f))[1:] if r and r[0] != today]
+all_rows = sorted(old_rows + [[str(x) for x in row]], key=lambda r: r[0])
+with history.open("w", newline="") as f:
     writer = csv.writer(f)
-    if new_file:
-        header = ["date", "segments", "accuracy", "macro_f1"]
-        for label in LABELS:
-            key = label.replace(" ", "_")
-            header += [f"{key}_precision", f"{key}_recall", f"{key}_f1"]
-        writer.writerow(header)
-    row = [today, n, f"{accuracy:.2f}", f"{macro_f1:.2f}"]
-    for label in LABELS:
-        m = per_label[label]
-        row += [f"{m['precision']:.2f}", f"{m['recall']:.2f}", f"{m['f1']:.2f}"]
-    writer.writerow(row)
+    writer.writerow(header)
+    writer.writerows(all_rows)
 
 # 7. Summary page: overall metrics, per-label metrics, confusion matrix
 lines = [f"## LLM judge vs. human MQM annotations ({today})", "",
