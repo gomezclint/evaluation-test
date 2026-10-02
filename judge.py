@@ -1,5 +1,5 @@
 """Step 2: LLM judge. Reads today's export and labels each translation with Gemini.
-The judge never sees the human annotations. Output: exports/<date>_judge_labels.csv"""
+The judge never sees the human annotations. Output: judge_labels/<date>_judge_labels.csv"""
 import csv, json, os, sys, time
 from datetime import date
 from pathlib import Path
@@ -102,7 +102,8 @@ if not labels:
     sys.exit("The judge labeled no translations. Check the errors above.")
 
 # 3. Save the judge's labels
-out = Path("exports") / f"{today}_judge_labels.csv"
+out = Path("judge_labels") / f"{today}_judge_labels.csv"
+out.parent.mkdir(exist_ok=True)
 with out.open("w", newline="", encoding="utf-8") as f:
     writer = csv.DictWriter(f, fieldnames=labels[0].keys())
     writer.writeheader()
