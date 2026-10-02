@@ -23,6 +23,7 @@ jobs:
       - run: python judge.py
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      - run: python compare.py
       - name: Commit results
         run: |
           git config user.name "github-actions[bot]"
