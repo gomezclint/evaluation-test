@@ -5,7 +5,7 @@ import requests
 
 URL = "https://huggingface.co/datasets/RicardoRei/wmt-mqm-error-spans/resolve/main/train.jsonl"
 LANG_PAIR = "en-de"   # English source, German translation
-BATCH = 50           # translations per day
+BATCH = 20          # translations per day
 start = (date.today().toordinal() * BATCH) % 10_000  # different batch each day
 
 rows, seen = [], 0
