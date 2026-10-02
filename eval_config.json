@@ -1,0 +1,14 @@
+{
+  "model": "gemini-flash-latest",
+  "candidate_prompt": "prompts/candidate_prompt.md",
+  "production_prompt": "prompts/production_prompt.md",
+  "production_metrics": "prompts/production_metrics.json",
+  "style_guide": "prompts/style_guide_de.md",
+  "golden_set": "golden/business_risk_golden.csv",
+  "thresholds": {
+    "recall": 0.90,
+    "precision": 0.80,
+    "f1": 0.85
+  },
+  "max_drop_vs_production": 0.02
+}
