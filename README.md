@@ -3,7 +3,7 @@
 
 Automated evaluation workflows for LLM-based translation quality assessment, built with Python and GitHub Actions. The repository contains two independent projects:
 
-1. **MQM pipeline**: a daily pipeline that pulls professionally annotated translation data, labels it with an LLM judge, and measures how closely the judge agrees with human annotators.
+1. **Daily-exports**: a daily pipeline that pulls professionally annotated translation data, labels it with an LLM judge, and measures how closely the judge agrees with human annotators.
 2. **Business-risk judge**: a prompt for detecting critical business risks in translations, with an automated regression test that promotes a new prompt version only when it meets quality thresholds and doesn't perform worse than the current production version.
 
 Together they demonstrate an end-to-end approach to LLM-as-judge evaluation: blind judging against human ground truth, calibration metrics tracked over time, golden-dataset regression testing, and threshold-gated prompt promotion.
@@ -17,11 +17,11 @@ Together they demonstrate an end-to-end approach to LLM-as-judge evaluation: bli
 ```
 evaluation-test/
 ├── .github/workflows/
-│   ├── daily-export.yml          # MQM: daily export + LLM judge labeling
-│   ├── compare.yml               # MQM: judge vs. human metrics (runs after the export)
+│   ├── daily-export.yml          # daily export + LLM judge labeling
+│   ├── compare.yml               # judge vs. human metrics (runs after the export)
 │   └── prompt-regression.yml     # Business risk: test and auto-promote prompt changes
 ├── requirements.txt
-├── mqm-pipeline/
+├── daily-exports/
 │   ├── export.py                 # Pulls human-annotated translations
 │   ├── judge.py                  # Labels translations with the LLM judge
 │   ├── compare.py                # Compares labels and calculates metrics
@@ -44,7 +44,7 @@ evaluation-test/
 
 ---
 
-## Project 1: MQM pipeline
+## Project 1: Daily Exports
 
 ### What it does
 
@@ -144,7 +144,7 @@ The run's summary page shows the candidate's scores next to production's, the re
    - `HF_TOKEN`: a Hugging Face access token (read access)
    - `GEMINI_API_KEY`: a Google AI Studio API key
 2. **Allow workflows to commit** under **Settings → Actions → General → Workflow permissions** by selecting **Read and write permissions**.
-3. **Run the workflows** from the **Actions** tab, or let them run on their own: the MQM pipeline runs daily, and the regression test runs whenever the business-risk files change.
+3. **Run the workflows** from the **Actions** tab, or let them run on their own: the daily-exports runs daily, and the regression test runs whenever the business-risk files change.
 
 ### Tech stack
 
@@ -164,10 +164,10 @@ Python 3.12 · GitHub Actions · Hugging Face Hub · Google Gemini API
 
 ## Data and attribution
 
-The MQM pipeline uses English→German translations with expert MQM error annotations from the WMT shared tasks, accessed through the [`RicardoRei/wmt-mqm-error-spans`](https://huggingface.co/datasets/RicardoRei/wmt-mqm-error-spans) dataset on Hugging Face. See the dataset card for its sources and license terms.
+The daily-exports uses English→German translations with expert MQM error annotations from the WMT shared tasks, accessed through the [`RicardoRei/wmt-mqm-error-spans`](https://huggingface.co/datasets/RicardoRei/wmt-mqm-error-spans) dataset on Hugging Face. See the dataset card for its sources and license terms.
 
 The business-risk golden set, style guide, and brand names (NovaPay, QuickSend) are synthetic examples created for this project.
 
 ---
 
-**Author:** [Your Name] · [LinkedIn](https://www.linkedin.com/in/your-profile)
+**Author:** [Laura Gomez Chacon] · [LinkedIn](https://www.linkedin.com/in/laura-gomez-chacon-40b47022)
