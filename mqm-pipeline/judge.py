@@ -5,7 +5,7 @@ from datetime import date
 from pathlib import Path
 import requests
 
-MODEL = "gemini-3.8-flash"  # if this errors, copy a current Flash model name from AI Studio
+MODEL = "gemini-flash-latest"  # if this errors, copy a current Flash model name from AI Studio
 API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:generateContent"
 GROUP_SIZE = 10  # translations sent to the judge in one request
 LABELS = ["no error", "minor", "major"]
@@ -35,10 +35,10 @@ def worst(severities):
     return w
 
 
-RETRY_WAIT = 30  # seconds to wait once after a rate-limit error before giving up
+RETRY_WAIT = 30  # seconds to wait once after a rate-limit or overload error before giving up
 
 
-class RateLimitError(Exception):
+class GeminiUnavailable(Exception):
     pass
 
 
@@ -53,14 +53,16 @@ def judge(group):
     for attempt in range(2):
         r = requests.post(API_URL, json=body, timeout=180,
                           headers={"x-goog-api-key": os.environ["GEMINI_API_KEY"]})
-        if r.status_code == 429:
-            if "PerDay" in r.text:  # daily limit used up: retrying won't help
-                raise RateLimitError("DAILY limit reached (resets at midnight Pacific time).\n" + r.text[:800])
+        if r.status_code == 429 and "PerDay" in r.text:  # daily limit used up: retrying won't help
+            raise GeminiUnavailable("DAILY limit reached (resets at midnight Pacific time).\n" + r.text[:800])
+        if r.status_code in (429, 500, 503, 504):  # rate limited, or Gemini overloaded / temporarily down
+            problem = "rate limited" if r.status_code == 429 else f"overloaded or unavailable (HTTP {r.status_code})"
             if attempt == 0:
-                print(f"Rate limited. Waiting {RETRY_WAIT}s and trying once more...")
+                print(f"Gemini is {problem}. Waiting {RETRY_WAIT}s and trying once more...")
                 time.sleep(RETRY_WAIT)
                 continue
-            raise RateLimitError(f"still rate limited after waiting {RETRY_WAIT}s.\n" + r.text[:800])
+            raise GeminiUnavailable(f"Gemini is still {problem} after waiting {RETRY_WAIT}s. "
+                                    f"Try again later.\n" + r.text[:800])
         if r.status_code != 200:
             raise RuntimeError(f"Gemini returned {r.status_code}: {r.text[:500]}")
         text = r.json()["candidates"][0]["content"]["parts"][0]["text"]
@@ -81,8 +83,8 @@ for start in range(0, len(translations), GROUP_SIZE):
     group = translations[start:start + GROUP_SIZE]
     try:
         answers = judge(group)
-    except RateLimitError as err:
-        sys.exit(f"Stopped: Gemini rate limit. {err}")
+    except GeminiUnavailable as err:
+        sys.exit(f"Stopped: {err}")
     except Exception as err:
         print(f"Skipped {len(group)} translations: {err}")
         continue
