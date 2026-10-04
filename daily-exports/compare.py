@@ -24,7 +24,7 @@ def safe_div(a, b):
     return a / b if b else 0.0
 
 
-HUMAN_FILE = Path("exports") / f"{today}_mqm_error_spans.csv"
+HUMAN_FILE = Path("human_labeled") / f"{today}_mqm_error_spans.csv"
 JUDGE_FILE = Path("judge_labels") / f"{today}_judge_labels.csv"
 OUT_DIR = Path("comparisons")
 for path in (HUMAN_FILE, JUDGE_FILE):

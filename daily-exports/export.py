@@ -33,7 +33,7 @@ with requests.get(URL, headers=headers, stream=True, timeout=120) as resp:
         if seen >= start + BATCH:
             break
 
-out = Path("exports") / f"{date.today()}_mqm_error_spans.csv"
+out = Path("human-labeled") / f"{date.today()}_mqm_error_spans.csv"
 out.parent.mkdir(exist_ok=True)
 with out.open("w", newline="", encoding="utf-8") as f:
     writer = csv.DictWriter(f, fieldnames=rows[0].keys())

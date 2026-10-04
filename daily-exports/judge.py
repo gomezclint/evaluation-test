@@ -78,7 +78,7 @@ def judge(group):
 
 # 1. Read the unique translations from today's export (the human labels are ignored)
 translations = []
-with (Path("exports") / f"{today}_mqm_error_spans.csv").open(encoding="utf-8") as f:
+with (Path("human-labeled") / f"{today}_mqm_error_spans.csv").open(encoding="utf-8") as f:
     for row in csv.DictReader(f):
         pair = (row["source_en"], row["translation_de"])
         if pair not in translations:

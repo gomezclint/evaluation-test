@@ -2,10 +2,10 @@ name: Prompt regression test
 on:
   push:
     paths:
-      - "business-risk/prompts/candidate_prompt.md"
-      - "business-risk/prompts/style_guide_de.md"
-      - "business-risk/golden/**"
-      - "business-risk/eval_config.json"
+      - "prompt-management/prompts/candidate_prompt.md"
+      - "prompt-management/prompts/style_guide_de.md"
+      - "prompt-management/golden/**"
+      - "prompt-management/eval_config.json"
   workflow_dispatch:
 
 permissions:
@@ -21,7 +21,7 @@ jobs:
     timeout-minutes: 15
     defaults:
       run:
-        working-directory: business-risk
+        working-directory: prompt-management
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6

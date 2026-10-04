@@ -25,10 +25,10 @@ evaluation-test/
 │   ├── export.py                 # Pulls human-annotated translations
 │   ├── judge.py                  # Labels translations with the LLM judge
 │   ├── compare.py                # Compares labels and calculates metrics
-│   ├── exports/                  # Daily human-annotated data
+│   ├── human-labeled/            # Daily human-annotated data
 │   ├── judge_labels/             # Daily LLM judge labels
 │   └── comparisons/              # Side-by-side comparisons + metrics_history.csv
-└── business-risk/
+└── prompt-management/
     ├── eval_prompt.py            # Regression test and promotion logic
     ├── eval_config.json          # Model, file paths, and promotion thresholds
     ├── prompts/
@@ -59,9 +59,9 @@ flowchart LR
     D --> G[Run summary page]
 ```
 
-Every day at 09:00 UTC:
+Every day at 04:00 UTC:
 
-1. **Export** (`export.py`) downloads a new batch of 50 English→German translations from the WMT MQM error-span dataset. Each translation comes with errors marked by professional annotators, including the error text and its severity (minor or major).
+1. **Export** (`export.py`) downloads a new batch of 20 English→German translations from the WMT MQM error-span dataset. Each translation comes with errors marked by professional annotators, including the error text and its severity (minor or major).
 2. **Judge** (`judge.py`) sends the same translations to an LLM (Gemini) with an MQM-style prompt and saves its labels. The judge never sees the human annotations.
 3. **Compare** (`compare.py`) runs automatically once the export succeeds. It matches the judge's labels to the human labels and calculates:
    - **Accuracy**: how often the judge's overall severity matches the human label exactly
@@ -85,7 +85,7 @@ In the **Actions** tab, open **Compare judge vs human → Run workflow** and ent
 
 ---
 
-## Project 2: Business-risk judge with regression testing
+## Project 2: Prompt Management with automatic regression testing after prompt update & promotion if pass
 
 ### The judge
 
