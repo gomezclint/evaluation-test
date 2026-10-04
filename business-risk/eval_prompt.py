@@ -12,7 +12,8 @@ from pathlib import Path
 import requests
 
 CONFIG = json.loads(Path("eval_config.json").read_text(encoding="utf-8"))
-API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{CONFIG['model']}:generateContent"
+MODEL = CONFIG["model"]
+API_URL = "https://api.groq.com/openai/v1/chat/completions"
 GROUP_SIZE = 10   # golden items sent to the judge per request
 RETRY_WAIT = 30   # seconds to wait once after a rate-limit or overload error before giving up
 RESULTS_DIR = Path("eval_results")
@@ -21,30 +22,32 @@ now = datetime.now(timezone.utc)
 stamp = now.strftime("%Y-%m-%d_%H%M%S")
 
 
-class GeminiUnavailable(Exception):
+class LLMUnavailable(Exception):
     pass
 
 
-def call_gemini(prompt_text):
-    body = {"contents": [{"parts": [{"text": prompt_text}]}],
-            "generationConfig": {"temperature": 0, "responseMimeType": "application/json"}}
+def call_llm(prompt_text):
+    """Send one prompt to Groq and return the parsed JSON reply."""
+    body = {"model": MODEL,
+            "messages": [{"role": "user", "content": prompt_text}],
+            "temperature": 0,
+            "response_format": {"type": "json_object"}}
     for attempt in range(2):
         r = requests.post(API_URL, json=body, timeout=180,
-                          headers={"x-goog-api-key": os.environ["GEMINI_API_KEY"]})
-        if r.status_code == 429 and "PerDay" in r.text:  # daily limit used up: retrying won't help
-            raise GeminiUnavailable("DAILY limit reached (resets at midnight Pacific time).\n" + r.text[:800])
-        if r.status_code in (429, 500, 503, 504):  # rate limited, or Gemini overloaded / temporarily down
+                          headers={"Authorization": f"Bearer {os.environ['GROQ_API_KEY']}"})
+        if r.status_code == 429 and "per day" in r.text.lower():  # daily limit used up: retrying won't help
+            raise LLMUnavailable("DAILY limit reached for this model.\n" + r.text[:800])
+        if r.status_code in (429, 500, 502, 503, 504):  # rate limited, or Groq overloaded / temporarily down
             problem = "rate limited" if r.status_code == 429 else f"overloaded or unavailable (HTTP {r.status_code})"
             if attempt == 0:
-                print(f"Gemini is {problem}. Waiting {RETRY_WAIT}s and trying once more...")
+                print(f"Groq is {problem}. Waiting {RETRY_WAIT}s and trying once more...")
                 time.sleep(RETRY_WAIT)
                 continue
-            raise GeminiUnavailable(f"Gemini is still {problem} after waiting {RETRY_WAIT}s. "
-                                    f"Try again later.\n" + r.text[:800])
+            raise LLMUnavailable(f"Groq is still {problem} after waiting {RETRY_WAIT}s. "
+                                 f"Try again later.\n" + r.text[:800])
         if r.status_code != 200:
-            raise RuntimeError(f"Gemini returned {r.status_code}: {r.text[:500]}")
-        text = r.json()["candidates"][0]["content"]["parts"][0]["text"]
-        return json.loads(text).get("results", [])
+            raise RuntimeError(f"Groq returned {r.status_code}: {r.text[:500]}")
+        return json.loads(r.json()["choices"][0]["message"]["content"])
 
 
 def build_prompt(template, style_guide, group):
@@ -61,7 +64,7 @@ def run_judge(template, style_guide, golden):
     for start in range(0, len(golden), GROUP_SIZE):
         group = golden[start:start + GROUP_SIZE]
         answers = {}
-        for a in call_gemini(build_prompt(template, style_guide, group)):
+        for a in call_llm(build_prompt(template, style_guide, group)).get("results", []):
             try:
                 answers[int(a["id"])] = a
             except (KeyError, TypeError, ValueError):
@@ -96,7 +99,7 @@ print(f"Testing candidate prompt {prompt_hash} on {len(golden)} golden items..."
 # 2. Run the candidate prompt on the golden set
 try:
     predictions = run_judge(template, style_guide, golden)
-except (GeminiUnavailable, RuntimeError) as err:
+except (LLMUnavailable, RuntimeError) as err:
     sys.exit(f"Could not finish the evaluation, so nothing was promoted. {err}")
 
 # 3. Score it (golden labels = ground truth; "positive" = critical business risk)
