@@ -51,7 +51,7 @@ evaluation-test/
 ```mermaid
 flowchart LR
     A[Hugging Face<br/>MQM dataset] -->|export.py| B[exports/<br/>human labels]
-    B -->|judge.py<br/>Gemini| C[judge_labels/<br/>LLM labels]
+    B -->|judge.py<br/>Groq| C[judge_labels/<br/>LLM labels]
     B --> D
     C --> D[compare.py]
     D --> E[comparisons/<br/>side-by-side CSV]
@@ -62,7 +62,7 @@ flowchart LR
 Every day at 04:00 UTC:
 
 1. **Export** (`export.py`) downloads a new batch of 20 English→German translations from the WMT MQM error-span dataset. Each translation comes with errors marked by professional annotators, including the error text and its severity (minor or major).
-2. **Judge** (`judge.py`) sends the same translations to an LLM (Gemini) with an MQM-style prompt and saves its labels. The judge never sees the human annotations.
+2. **Judge** (`judge.py`) sends the same translations to an LLM (GROQ) with an MQM-style prompt and saves its labels. The judge never sees the human annotations.
 3. **Compare** (`compare.py`) runs automatically once the export succeeds. It matches the judge's labels to the human labels and calculates:
    - **Accuracy**: how often the judge's overall severity matches the human label exactly
    - **Precision, recall, and F1 for each label** (no error, minor, major)
@@ -142,13 +142,13 @@ The run's summary page shows the candidate's scores next to production's, the re
 
 1. **Add the repository secrets** under **Settings → Secrets and variables → Actions**:
    - `HF_TOKEN`: a Hugging Face access token (read access)
-   - `GEMINI_API_KEY`: a Google AI Studio API key
+   - `GROQ_API_KEY`: a GROQ API key
 2. **Allow workflows to commit** under **Settings → Actions → General → Workflow permissions** by selecting **Read and write permissions**.
 3. **Run the workflows** from the **Actions** tab, or let them run on their own: the daily-exports runs daily, and the regression test runs whenever the business-risk files change.
 
 ### Tech stack
 
-Python 3.12 · GitHub Actions · Hugging Face Hub · Google Gemini API
+Python 3.12 · GitHub Actions · Hugging Face Hub · Groq API
 
 ---
 
@@ -158,7 +158,7 @@ Python 3.12 · GitHub Actions · Hugging Face Hub · Google Gemini API
 - **LLM non-determinism.** Even at temperature 0, results can vary slightly between runs, so a borderline candidate may pass one run and fail the next. Averaging several runs per evaluation would make promotion decisions more robust.
 - **Span-level agreement.** The MQM comparison works at the translation level. Measuring overlap between the exact error spans flagged by the judge and by humans would give a finer-grained view.
 - **Connecting the projects.** A natural next step is to have the daily pipeline load the promoted `production_prompt.md`, so an approved prompt goes into use automatically the next day.
-- **Free-tier constraints.** Batch sizes and pacing are tuned for Gemini's free tier. A paid tier would allow larger daily batches and one-item-per-request judging.
+- **Free-tier constraints.** Batch sizes and pacing are tuned for Groq's free tier. A paid tier would allow larger daily batches and one-item-per-request judging.
 
 ---
 
