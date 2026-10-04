@@ -24,7 +24,7 @@ def safe_div(a, b):
     return a / b if b else 0.0
 
 
-HUMAN_FILE = Path("human_labeled") / f"{today}_mqm_error_spans.csv"
+HUMAN_FILE = Path("human-labeled") / f"{today}_mqm_error_spans.csv"
 JUDGE_FILE = Path("judge_labels") / f"{today}_judge_labels.csv"
 OUT_DIR = Path("comparisons")
 for path in (HUMAN_FILE, JUDGE_FILE):
@@ -72,7 +72,9 @@ for label in LABELS:
     recall = safe_div(tp, tp + fn)
     f1 = safe_div(2 * precision * recall, precision + recall)
     support = sum(r["human_severity"] == label for r in results)
-    per_label[label] = {"precision": precision, "recall": recall, "f1": f1, "support": support}
+    llm_count = sum(r["llm_severity"] == label for r in results)
+    per_label[label] = {"precision": precision, "recall": recall, "f1": f1,
+                        "support": support, "llm_count": llm_count}
 macro_f1 = sum(m["f1"] for m in per_label.values()) / len(LABELS)
 
 # 5. Save the side-by-side comparison
@@ -111,10 +113,10 @@ lines = [f"## LLM judge vs. human MQM annotations ({today})", "",
          f"| Accuracy | {accuracy:.0%} |",
          f"| Macro-F1 | {macro_f1:.2f} |", "",
          "**Per-label metrics** (human labels = ground truth)", "",
-         "| Label | Precision | Recall | F1 | Human count |", "|---|---|---|---|---|"]
+         "| Label | Precision | Recall | F1 | Human count | LLM count |", "|---|---|---|---|---|---|"]
 for label in LABELS:
     m = per_label[label]
-    lines.append(f"| {label} | {m['precision']:.0%} | {m['recall']:.0%} | {m['f1']:.2f} | {m['support']} |")
+    lines.append(f"| {label} | {m['precision']:.0%} | {m['recall']:.0%} | {m['f1']:.2f} | {m['support']} | {m['llm_count']} |")
 lines += ["", "**Confusion matrix** (rows = human, columns = LLM)", "",
           "| | " + " | ".join(LABELS) + " |", "|---" * 4 + "|"]
 for h in LABELS:
