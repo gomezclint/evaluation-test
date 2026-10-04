@@ -1,0 +1,2 @@
+timestamp,prompt_hash,golden_items,precision,recall,f1,accuracy,category_accuracy,decision
+2026-10-04T01:25:46+00:00,093214ca,26,1.00,1.00,1.00,1.00,0.92,PROMOTED

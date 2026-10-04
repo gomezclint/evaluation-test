@@ -1,0 +1,11 @@
+{
+  "promoted_at": "2026-10-04T01:25:46+00:00",
+  "prompt_hash": "093214ca",
+  "metrics": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "accuracy": 1.0,
+    "category_accuracy": 0.9231
+  }
+}
