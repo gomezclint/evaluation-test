@@ -5,7 +5,7 @@ from datetime import date
 from pathlib import Path
 import requests
 
-MODEL = "gemini-3.8-flash"  # if this errors, copy a current Flash model name from AI Studio
+MODEL = "gemini-2.5-pro"  # if this errors, copy a current Flash model name from AI Studio
 API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:generateContent"
 GROUP_SIZE = 10  # translations sent to the judge in one request
 LABELS = ["no error", "minor", "major"]
