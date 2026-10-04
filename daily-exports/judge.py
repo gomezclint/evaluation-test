@@ -1,12 +1,12 @@
-"""Step 2: LLM judge. Reads today's export and labels each translation with Gemini.
+"""Step 2: LLM judge. Reads today's export and labels each translation with an LLM judge (via Groq).
 The judge never sees the human annotations. Output: judge_labels/<date>_judge_labels.csv"""
 import csv, json, os, sys, time
 from datetime import date
 from pathlib import Path
 import requests
 
-MODEL = "gemini-2.5-pro"  # if this errors, copy a current Flash model name from AI Studio
-API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:generateContent"
+MODEL = "openai/gpt-oss-120b"  # any current Groq model ID (see console.groq.com/docs/models)
+API_URL = "https://api.groq.com/openai/v1/chat/completions"
 GROUP_SIZE = 10  # translations sent to the judge in one request
 LABELS = ["no error", "minor", "major"]
 RANK = {label: i for i, label in enumerate(LABELS)}
@@ -38,8 +38,32 @@ def worst(severities):
 RETRY_WAIT = 30  # seconds to wait once after a rate-limit or overload error before giving up
 
 
-class GeminiUnavailable(Exception):
+class LLMUnavailable(Exception):
     pass
+
+
+def call_llm(prompt_text):
+    """Send one prompt to Groq and return the parsed JSON reply."""
+    body = {"model": MODEL,
+            "messages": [{"role": "user", "content": prompt_text}],
+            "temperature": 0,
+            "response_format": {"type": "json_object"}}
+    for attempt in range(2):
+        r = requests.post(API_URL, json=body, timeout=180,
+                          headers={"Authorization": f"Bearer {os.environ['GROQ_API_KEY']}"})
+        if r.status_code == 429 and "per day" in r.text.lower():  # daily limit used up: retrying won't help
+            raise LLMUnavailable("DAILY limit reached for this model.\n" + r.text[:800])
+        if r.status_code in (429, 500, 502, 503, 504):  # rate limited, or Groq overloaded / temporarily down
+            problem = "rate limited" if r.status_code == 429 else f"overloaded or unavailable (HTTP {r.status_code})"
+            if attempt == 0:
+                print(f"Groq is {problem}. Waiting {RETRY_WAIT}s and trying once more...")
+                time.sleep(RETRY_WAIT)
+                continue
+            raise LLMUnavailable(f"Groq is still {problem} after waiting {RETRY_WAIT}s. "
+                                 f"Try again later.\n" + r.text[:800])
+        if r.status_code != 200:
+            raise RuntimeError(f"Groq returned {r.status_code}: {r.text[:500]}")
+        return json.loads(r.json()["choices"][0]["message"]["content"])
 
 
 def judge(group):
@@ -48,25 +72,8 @@ def judge(group):
         f"Item {i}\nSource (English): {src}\nTranslation (German): {mt}"
         for i, (src, mt) in enumerate(group, start=1)
     )
-    body = {"contents": [{"parts": [{"text": PROMPT.format(items=items)}]}],
-            "generationConfig": {"temperature": 0, "responseMimeType": "application/json"}}
-    for attempt in range(2):
-        r = requests.post(API_URL, json=body, timeout=180,
-                          headers={"x-goog-api-key": os.environ["GEMINI_API_KEY"]})
-        if r.status_code == 429 and "PerDay" in r.text:  # daily limit used up: retrying won't help
-            raise GeminiUnavailable("DAILY limit reached (resets at midnight Pacific time).\n" + r.text[:800])
-        if r.status_code in (429, 500, 503, 504):  # rate limited, or Gemini overloaded / temporarily down
-            problem = "rate limited" if r.status_code == 429 else f"overloaded or unavailable (HTTP {r.status_code})"
-            if attempt == 0:
-                print(f"Gemini is {problem}. Waiting {RETRY_WAIT}s and trying once more...")
-                time.sleep(RETRY_WAIT)
-                continue
-            raise GeminiUnavailable(f"Gemini is still {problem} after waiting {RETRY_WAIT}s. "
-                                    f"Try again later.\n" + r.text[:800])
-        if r.status_code != 200:
-            raise RuntimeError(f"Gemini returned {r.status_code}: {r.text[:500]}")
-        text = r.json()["candidates"][0]["content"]["parts"][0]["text"]
-        return {int(x["id"]): x.get("errors", []) for x in json.loads(text).get("results", [])}
+    reply = call_llm(PROMPT.format(items=items))
+    return {int(x["id"]): x.get("errors", []) for x in reply.get("results", [])}
 
 
 # 1. Read the unique translations from today's export (the human labels are ignored)
@@ -83,7 +90,7 @@ for start in range(0, len(translations), GROUP_SIZE):
     group = translations[start:start + GROUP_SIZE]
     try:
         answers = judge(group)
-    except GeminiUnavailable as err:
+    except LLMUnavailable as err:
         sys.exit(f"Stopped: {err}")
     except Exception as err:
         print(f"Skipped {len(group)} translations: {err}")
