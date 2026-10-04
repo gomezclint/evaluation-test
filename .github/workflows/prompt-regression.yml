@@ -31,7 +31,7 @@ jobs:
       - name: Test candidate prompt (promotes it if every check passes)
         run: python eval_prompt.py --promote
         env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
       - name: Save results
         if: always()
         run: |
