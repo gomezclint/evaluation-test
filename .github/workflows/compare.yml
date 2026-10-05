@@ -27,6 +27,7 @@ jobs:
       - run: python compare.py
         env:
           RUN_DATE: ${{ github.event.inputs.date }}
+          RUN_MODE: ${{ github.event_name == 'workflow_dispatch' && 'manual' || 'daily' }}
       - name: Commit results
         run: |
           git config user.name "github-actions[bot]"

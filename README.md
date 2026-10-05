@@ -27,11 +27,12 @@ evaluation-test/
 │   ├── compare.py                # Compares labels and calculates metrics
 │   ├── human-labeled/            # Daily human-annotated data
 │   ├── judge_labels/             # Daily LLM judge labels
-│   └── comparisons/              # Side-by-side comparisons + metrics_history.csv
-        ├── metrics_history.csv
-        └── results/        
+│   └── comparisons/              
+        ├── metrics_history.csv   # One row per day (daily runs only)
+        └── results/              # Daily side-by-side comparisons
+        └── manual-runs/          # Manually triggered comparisons, kept 
 └── prompt-management/
-    ├── eval_prompt.py            # Regression test and promotion logic
+    ├── regression_test.py            # Regression test and promotion logic
     ├── eval_config.json          # Model, file paths, and promotion thresholds
     ├── prompts/
     │   ├── candidate_prompt.md   # The prompt under development (edit this one)
@@ -41,7 +42,7 @@ evaluation-test/
     │   └── style_guide_de.md     # Locale style guide injected into the prompt
     ├── golden/
     │   └── business_risk_golden.csv
-    └── eval_results/             # Per-run results + eval_history.csv
+    └── regression_results/             # Per-run results + regression_history.csv
 ```
 
 ---
@@ -80,18 +81,22 @@ Results are committed back to the repository, so every day's data, labels, and m
 - **Translation-level comparison.** Each translation's overall label is its most severe error. This keeps the comparison simple and reliable, at the cost of not checking whether the judge flagged the exact same text spans.
 - **Batched judging.** The judge evaluates 10 translations per request to stay within free-tier rate limits. Batching can slightly change model behavior compared with judging items one at a time, so the prompt instructs the model to judge each item independently, and the group size is configurable (`GROUP_SIZE` in `judge.py`) for comparison.
 - **Clear failure modes.** If the API hits a rate limit, the judge waits once and then stops with the provider's error message, instead of retrying silently or producing partial results.
+- **Manual runs never alter the official record.** Daily results and the metrics history are produced only by the scheduled pipeline, so every day is scored the same way and the trend stays comparable. Manual comparisons are treated as investigations and saved separately.
 
-### Re-running a comparison for a past date
+### Running a manual comparison
 
-In the **Actions** tab, open **Compare judge vs human → Run workflow** and enter a date (`YYYY-MM-DD`). Re-running a date replaces that date's row in the metrics history rather than duplicating it.
+In the Actions tab, open Compare judge vs human → Run workflow, optionally enter a date (YYYY-MM-DD), and click Run workflow. Leaving the date empty uses today.
 
+Manual runs are kept separate from the daily record. Each one is saved to comparisons/manual-runs/ with the run's date and time in the file name, so repeated runs never overwrite each other. They don't change the daily files in comparisons/results/ or metrics_history.csv, and the run's summary page notes that it was a manual run.
+
+A manual comparison re-scores the judge labels already saved for that date; it doesn't call the judge again. It's useful for checking the effect of changes to the scoring logic in compare.py.
 ---
 
 ## Project 2: Prompt Management with automatic regression testing after prompt update & promotion if pass
 
 ### The judge
 
-The prompt in `business-risk/prompts/` flags translations that contain a **critical business risk**: an error that could harm users, create legal or financial exposure, or seriously damage the brand if published. It defines five categories:
+The prompt in `prompt-management/prompts/` flags translations that contain a **critical business risk**: an error that could harm users, create legal or financial exposure, or seriously damage the brand if published. It defines five categories:
 
 | Category | Examples |
 |---|---|
@@ -128,7 +133,7 @@ Any commit that changes the candidate prompt, the style guide, the golden set, o
 3. Checks the scores against the thresholds in `eval_config.json` and against the current production prompt's scores.
 4. **Promotes** the candidate automatically if every check passes, or **rejects** it and leaves production untouched if any check fails.
 
-The run's summary page shows the candidate's scores next to production's, the result of each check, and a table of every item the judge got wrong, with the judge's reasoning. Every attempt is recorded in `eval_results/eval_history.csv`, and every promotion in `prompts/promotion_log.csv`.
+The run's summary page shows the candidate's scores next to production's, the result of each check, and a table of every item the judge got wrong, with the judge's reasoning. Every attempt is recorded in `regression_results/regression_history.csv`, and every promotion in `prompts/promotion_log.csv`.
 
 ### Design decisions
 

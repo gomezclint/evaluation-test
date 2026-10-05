@@ -16,7 +16,7 @@ MODEL = CONFIG["model"]
 API_URL = "https://api.groq.com/openai/v1/chat/completions"
 GROUP_SIZE = 10   # golden items sent to the judge per request
 RETRY_WAIT = 30   # seconds to wait once after a rate-limit or overload error before giving up
-RESULTS_DIR = Path("eval_results")
+RESULTS_DIR = Path("regression_results")
 promote = "--promote" in sys.argv
 now = datetime.now(timezone.utc)
 stamp = now.strftime("%Y-%m-%d_%H%M%S")
@@ -175,7 +175,7 @@ with (RESULTS_DIR / f"{stamp}_{prompt_hash}.csv").open("w", newline="", encoding
     writer.writeheader()
     writer.writerows(rows)
 
-history = RESULTS_DIR / "eval_history.csv"
+history = RESULTS_DIR / "regression_history.csv"
 new_file = not history.exists()
 with history.open("a", newline="", encoding="utf-8") as f:
     writer = csv.writer(f)

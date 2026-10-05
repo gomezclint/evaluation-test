@@ -1,7 +1,7 @@
 """Step 3: Compare the LLM judge's labels with the human annotations and calculate metrics.
 Outputs: comparisons/results/<date>_judge_comparison.csv, comparisons/metrics_history.csv, and the run's summary page."""
 import csv, os, sys
-from datetime import date
+from datetime import date, datetime, timezone
 from pathlib import Path
 
 LABELS = ["no error", "minor", "major"]
@@ -27,6 +27,8 @@ def safe_div(a, b):
 HUMAN_FILE = Path("human-labeled") / f"{today}_mqm_error_spans.csv"
 JUDGE_FILE = Path("judge_labels") / f"{today}_judge_labels.csv"
 OUT_DIR = Path("comparisons")
+# Manual runs are kept separately and never replace the daily results or the history
+MANUAL = os.environ.get("RUN_MODE") == "manual"
 for path in (HUMAN_FILE, JUDGE_FILE):
     if not path.exists():
         sys.exit(f"Missing {path}. Run the daily export first, or pick a date that has both files.")
@@ -78,9 +80,14 @@ for label in LABELS:
 macro_f1 = sum(m["f1"] for m in per_label.values()) / len(LABELS)
 
 # 5. Save the side-by-side comparison
-RESULTS_DIR = OUT_DIR / "results"
+if MANUAL:
+    run_stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+    RESULTS_DIR = OUT_DIR / "manual-runs"
+    out = RESULTS_DIR / f"{today}_run-{run_stamp}_judge_comparison.csv"
+else:
+    RESULTS_DIR = OUT_DIR / "results"
+    out = RESULTS_DIR / f"{today}_judge_comparison.csv"
 RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-out = RESULTS_DIR / f"{today}_judge_comparison.csv"
 with out.open("w", newline="", encoding="utf-8") as f:
     writer = csv.DictWriter(f, fieldnames=results[0].keys())
     writer.writeheader()
@@ -96,20 +103,22 @@ for label in LABELS:
     m = per_label[label]
     row += [f"{m['precision']:.2f}", f"{m['recall']:.2f}", f"{m['f1']:.2f}"]
 
-history = OUT_DIR / "metrics_history.csv"
-old_rows = []
-if history.exists():
-    with history.open(newline="") as f:
-        old_rows = [r for r in list(csv.reader(f))[1:] if r and r[0] != today]
-all_rows = sorted(old_rows + [[str(x) for x in row]], key=lambda r: r[0])
-with history.open("w", newline="") as f:
-    writer = csv.writer(f)
-    writer.writerow(header)
-    writer.writerows(all_rows)
+if not MANUAL:
+    history = OUT_DIR / "metrics_history.csv"
+    old_rows = []
+    if history.exists():
+        with history.open(newline="") as f:
+            old_rows = [r for r in list(csv.reader(f))[1:] if r and r[0] != today]
+    all_rows = sorted(old_rows + [[str(x) for x in row]], key=lambda r: r[0])
+    with history.open("w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(header)
+        writer.writerows(all_rows)
 
 # 7. Summary page: overall metrics, per-label metrics, confusion matrix
 lines = [f"## LLM judge vs. human MQM annotations ({today})", "",
          f"Translations compared: **{n}**", "",
+         *([f"_Manual run: saved to {out}. The daily results and metrics history were not changed._", ""] if MANUAL else []),
          "| Overall | Value |", "|---|---|",
          f"| Accuracy | {accuracy:.0%} |",
          f"| Macro-F1 | {macro_f1:.2f} |", "",
