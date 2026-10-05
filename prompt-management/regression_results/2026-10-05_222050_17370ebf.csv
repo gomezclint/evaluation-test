@@ -1,0 +1,27 @@
+id,source_en,translation_de,gold_critical,gold_category,judge_critical,judge_category,outcome,evidence,reason
+C01,Do not use this product on children under 3.,Verwenden Sie dieses Produkt bei Kindern unter 3 Jahren.,yes,safety,yes,safety,TP,Verwenden Sie dieses Produkt bei Kindern unter 3 Jahren.,Missing negation leads to unsafe use on young children.
+C02,Your subscription renews automatically at $9.99 per month.,"Ihr Abonnement verlängert sich automatisch zum Preis von 99,99 $ pro Monat.",yes,financial_numeric,yes,financial_numeric,TP,"Ihr Abonnement verlängert sich automatisch zum Preis von 99,99 $ pro Monat.",Price is incorrect (off by factor of 10).
+C03,Refunds are available within 30 days of purchase.,Rückerstattungen sind innerhalb von 3 Tagen nach dem Kauf möglich.,yes,legal_privacy,yes,financial_numeric,TP,Rückerstattungen sind innerhalb von 3 Tagen nach dem Kauf möglich.,Refund period shortened from 30 to 3 days.
+C04,We will never share your personal data with third parties.,Wir geben Ihre personenbezogenen Daten an Dritte weiter.,yes,legal_privacy,yes,legal_privacy,TP,Wir geben Ihre personenbezogenen Daten an Dritte weiter.,Contradicts original statement of never sharing data.
+C05,Unplug the device before cleaning it.,"Reinigen Sie das Gerät, bevor Sie den Netzstecker ziehen.",yes,safety,yes,safety,TP,"Reinigen Sie das Gerät, bevor Sie den Netzstecker ziehen.",Reversed order of safety steps (clean before unplugging).
+C06,Store below 25 °C.,Unter 52 °C lagern.,yes,safety,yes,safety,TP,Unter 52 °C lagern.,Incorrect storage temperature limit (should be below 25 °C).
+C07,"By clicking Accept, you agree to our Terms of Service and Privacy Policy.",Durch Klicken auf „Akzeptieren“ stimmen Sie unseren Nutzungsbedingungen zu.,yes,legal_privacy,yes,legal_privacy,TP,Durch Klicken auf „Akzeptieren“ stimmen Sie unseren Nutzungsbedingungen zu.,Omitted reference to the Privacy Policy.
+C08,"Thanks for your patience, we'll fix this soon.","Danke für Ihre Geduld, wir kümmern uns bald um diesen Mist.",yes,offensive,yes,offensive,TP,"Danke für Ihre Geduld, wir kümmern uns bald um diesen Mist.",Contains profanity not present in the source.
+C09,Sign in with your NovaPay account.,Melden Sie sich mit Ihrem NeuZahl-Konto an.,yes,brand,yes,brand,TP,Melden Sie sich mit Ihrem NeuZahl-Konto an.,Protected brand name NovaPay is incorrectly translated.
+C10,Warning: Contains nuts.,Hinweis: Enthält keine Nüsse.,yes,safety,yes,safety,TP,Hinweis: Enthält keine Nüsse.,"Reversed allergen information, could endanger nut‑allergic users."
+C11,The offer ends on 05/10/2026.,Das Angebot endet am 05.10.2026.,yes,financial_numeric,yes,financial_numeric,TP,Das Angebot endet am 05.10.2026.,Wrong deadline date misleads customers.
+C12,Take one tablet twice daily.,Nehmen Sie zweimal täglich zwei Tabletten ein.,yes,safety,yes,safety,TP,Nehmen Sie zweimal täglich zwei Tabletten ein.,"Dosage doubled, could harm health."
+C13,Free shipping on orders over €50.,Kostenloser Versand für alle Bestellungen.,yes,financial_numeric,yes,financial_numeric,TP,Kostenloser Versand für alle Bestellungen.,"Condition (orders over €50) omitted, financial exposure."
+N01,Your order has shipped.,Ihre Bestellung wurde versandt.,no,none,no,none,TN,,
+N02,Your password has been changed.,Ihr Passwort wurde geändert worden.,no,none,no,none,TN,,
+N03,Update your profile to get better recommendations.,"Aktualisiere dein Profil, um bessere Empfehlungen zu erhalten.",no,none,no,none,TN,,
+N04,"Total: €1,250.00","Gesamt: 1250,00 €",no,none,no,none,TN,,
+N05,"Select ""Settings"" from the menu.","Wählen Sie im Menü ""Einstellungen"" aus.",no,none,no,none,TN,,
+N06,We're excited to have you on board!,"Wir sind aufgeregt, Sie an Bord zu haben!",no,none,no,none,TN,,
+N07,Add the item to your cart.,Legen Sie den Artikel in Ihren Einkaufskorb.,no,none,no,none,TN,,
+N08,Need help? Contact our support team.,Brauchen Sie Hilfe? Kontaktieren Sie unser Support-Team.,no,none,no,none,TN,,
+N09,The update will be installed automatically tonight.,Das Update wird heute Nacht automatisch installiert.,no,none,no,none,TN,,
+N10,Your payment was successful.,Ihre Zahlung war erfolgreicht.,no,none,no,none,TN,,
+N11,The event takes place on 03/14/2026.,Die Veranstaltung findet am 14.03.2026 statt.,no,none,no,none,TN,,
+N12,Only $4.99 per month.,"Nur 4,99 $ pro Monat.",no,none,no,none,TN,,
+N13,Your NovaPay balance is shown on the home screen.,Ihr NovaPay-Guthaben wird auf dem Startbildschirm angezeigt.,no,none,no,none,TN,,
