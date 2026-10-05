@@ -10,5 +10,6 @@
     "precision": 0.80,
     "f1": 0.85
   },
-  "max_drop_vs_production": 0.02
+  "max_drop_vs_production": 0.02,
+  "block_new_misses": true
 }

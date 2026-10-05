@@ -7,6 +7,15 @@ on:
       - "prompt-management/golden/**"
       - "prompt-management/eval_config.json"
   workflow_dispatch:
+    inputs:
+      mode:
+        description: "What to run"
+        type: choice
+        default: test-and-promote
+        options:
+          - test-and-promote
+          - test-only
+          - rebaseline
 
 permissions:
   contents: write
@@ -28,10 +37,16 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -r ../requirements.txt
-      - name: Test candidate prompt (promotes it if every check passes)
-        run: python regression_test.py --promote
+      - name: Run regression test
+        run: |
+          case "$MODE" in
+            test-only)  python regression_test.py ;;
+            rebaseline) python regression_test.py --rebaseline ;;
+            *)          python regression_test.py --promote ;;
+          esac
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          MODE: ${{ github.event.inputs.mode || 'test-and-promote' }}
       - name: Save results
         if: always()
         run: |

@@ -1,10 +1,9 @@
-[README.md](https://github.com/user-attachments/files/32983900/README.md)
 # LLM Translation Evaluation Pipelines
 
 Automated evaluation workflows for LLM-based translation quality assessment, built with Python and GitHub Actions. The repository contains two independent projects:
 
-1. **Daily-exports**: a daily pipeline that pulls professionally annotated translation data, labels it with an LLM judge, and measures how closely the judge agrees with human annotators.
-2. **Business-risk judge**: a prompt for detecting critical business risks in translations, with an automated regression test that promotes a new prompt version only when it meets quality thresholds and doesn't perform worse than the current production version.
+1. **Daily exports**: a daily pipeline that pulls professionally annotated translation data, labels it with an LLM judge, and measures how closely the judge agrees with human annotators.
+2. **Prompt management**: a prompt for detecting critical business risks in translations, with an automated regression test that promotes a new prompt version only when it meets quality thresholds and doesn't perform worse than the current production version.
 
 Together they demonstrate an end-to-end approach to LLM-as-judge evaluation: blind judging against human ground truth, calibration metrics tracked over time, golden-dataset regression testing, and threshold-gated prompt promotion.
 
@@ -17,82 +16,88 @@ Together they demonstrate an end-to-end approach to LLM-as-judge evaluation: bli
 ```
 evaluation-test/
 ├── .github/workflows/
-│   ├── daily-export.yml          # daily export + LLM judge labeling
-│   ├── compare.yml               # judge vs. human metrics (runs after the export)
-│   └── prompt-regression.yml     # Business risk: test and auto-promote prompt changes
+│   ├── daily-export.yml            # Daily export + LLM judge labeling
+│   ├── compare.yml                 # Judge vs. human metrics (runs after the export)
+│   └── prompt-regression.yml       # Prompt management: test and auto-promote prompt changes
 ├── requirements.txt
 ├── daily-exports/
-│   ├── export.py                 # Pulls human-annotated translations
-│   ├── judge.py                  # Labels translations with the LLM judge
-│   ├── compare.py                # Compares labels and calculates metrics
-│   ├── human-labeled/            # Daily human-annotated data
-│   ├── judge_labels/             # Daily LLM judge labels
-│   └── comparisons/              
-        ├── metrics_history.csv   # One row per day (daily runs only)
-        └── results/              # Daily side-by-side comparisons
-        └── manual-runs/          # Manually triggered comparisons, kept 
+│   ├── export.py                   # Pulls human-annotated translations
+│   ├── judge.py                    # Labels translations with the LLM judge
+│   ├── compare.py                  # Compares labels and calculates metrics
+│   ├── human-labeled/              # Daily human-annotated data
+│   ├── judge_labels/               # Daily LLM judge labels
+│   └── comparisons/
+│       ├── metrics_history.csv     # One row per day (daily runs only)
+│       ├── results/                # Daily side-by-side comparisons
+│       └── manual-runs/            # Manually triggered comparisons, kept separately
 └── prompt-management/
-    ├── regression_test.py            # Regression test and promotion logic
-    ├── eval_config.json          # Model, file paths, and promotion thresholds
+    ├── regression_test.py          # Regression test and promotion logic
+    ├── regression_config.json      # Model, file paths, and promotion thresholds
     ├── prompts/
-    │   ├── candidate_prompt.md   # The prompt under development (edit this one)
-    │   ├── production_prompt.md  # The current approved prompt (changed only by promotion)
-    │   ├── production_metrics.json
-    │   ├── promotion_log.csv
-    │   └── style_guide_de.md     # Locale style guide injected into the prompt
+    │   ├── candidate_prompt.md     # The prompt under development (edit this one)
+    │   ├── production_prompt.md    # The current approved prompt (changed only by promotion)
+    │   ├── production_metrics.json # Baseline scores of the production prompt
+    │   ├── production_items.json   # Baseline item-by-item results of the production prompt
+    │   ├── promotion_log.csv       # One row per promotion
+    │   └── style_guide_de.md       # Locale style guide injected into the prompt
     ├── golden/
     │   └── business_risk_golden.csv
-    └── regression_results/             # Per-run results + regression_history.csv
+    └── regression_results/         # Per-run results + regression_history.csv
 ```
 
 ---
 
-## Project 1: Daily Exports
+## Project 1: Daily exports
 
 ### What it does
 
 ```mermaid
 flowchart LR
-    A[Hugging Face<br/>MQM dataset] -->|export.py| B[exports/<br/>human labels]
-    B -->|judge.py<br/>Groq| C[judge_labels/<br/>LLM labels]
+    A[Hugging Face<br/>MQM dataset] -->|export.py| B[human-labeled/<br/>human labels]
+    B -->|judge.py<br/>LLM via Groq| C[judge_labels/<br/>LLM labels]
     B --> D
     C --> D[compare.py]
-    D --> E[comparisons/<br/>side-by-side CSV]
-    D --> F[metrics_history.csv]
+    D --> E[comparisons/results/<br/>side-by-side CSV]
+    D --> F[comparisons/<br/>metrics_history.csv]
     D --> G[Run summary page]
 ```
 
 Every day at 04:00 UTC:
 
 1. **Export** (`export.py`) downloads a new batch of 20 English→German translations from the WMT MQM error-span dataset. Each translation comes with errors marked by professional annotators, including the error text and its severity (minor or major).
-2. **Judge** (`judge.py`) sends the same translations to an LLM (GROQ) with an MQM-style prompt and saves its labels. The judge never sees the human annotations.
+2. **Judge** (`judge.py`) sends the same translations to an LLM (`openai/gpt-oss-120b` via the Groq API) with an MQM-style prompt and saves its labels. The judge never sees the human annotations.
 3. **Compare** (`compare.py`) runs automatically once the export succeeds. It matches the judge's labels to the human labels and calculates:
    - **Accuracy**: how often the judge's overall severity matches the human label exactly
-   - **Precision, recall, and F1 for each label** (no error, minor, major)
+   - **Precision, recall, and F1 for each label** (no error, minor, major), shown alongside how many translations the humans and the judge each assigned to that label
    - **Macro-F1**: the average F1 across all three labels
+   - **Cohen's kappa** and **weighted kappa**: agreement between judge and humans, corrected for agreement expected by chance. The weighted version uses quadratic weights, so confusing "no error" with "major" counts more than confusing neighboring labels.
+   - **95% confidence intervals** for accuracy and per-label precision and recall (Wilson intervals), and for macro-F1 and both kappas (bootstrap)
    - **A confusion matrix** showing where the judge and humans disagree
 
-Results are committed back to the repository, so every day's data, labels, and metrics stay versioned. The metrics also appear on each workflow run's summary page, and `metrics_history.csv` tracks the trend over time.
+Results are committed back to the repository, so every day's data, labels, and metrics stay versioned. The metrics also appear on each workflow run's summary page, and `comparisons/metrics_history.csv` tracks the trend over time.
 
 ### Design decisions
 
 - **The judge is blind to the ground truth.** Judging and scoring are separate scripts, so the judge can't be influenced by the human labels, and the scoring logic can be changed and re-run on past data without calling the LLM again.
 - **Matching label scales.** The human annotators for this data used only minor and major severities, so the judge is restricted to the same scale to keep the labels comparable.
+- **Kappa alongside accuracy.** Severity labels are often imbalanced, and accuracy can look high simply because the judge favors the most common label. Kappa corrects for chance agreement and is the standard measure of inter-annotator agreement, which makes the judge's results comparable to agreement between human annotators. Weighted kappa reflects that the labels are ordered.
+- **Confidence intervals on every headline metric.** With 20 translations a day, the scores carry real uncertainty, and the intervals show which day-to-day changes are meaningful and which are noise.
 - **Translation-level comparison.** Each translation's overall label is its most severe error. This keeps the comparison simple and reliable, at the cost of not checking whether the judge flagged the exact same text spans.
 - **Batched judging.** The judge evaluates 10 translations per request to stay within free-tier rate limits. Batching can slightly change model behavior compared with judging items one at a time, so the prompt instructs the model to judge each item independently, and the group size is configurable (`GROUP_SIZE` in `judge.py`) for comparison.
-- **Clear failure modes.** If the API hits a rate limit, the judge waits once and then stops with the provider's error message, instead of retrying silently or producing partial results.
+- **Clear failure modes.** If the API is rate limited or overloaded, the judge waits 30 seconds, tries once more, and then stops with the provider's error message, instead of retrying silently or producing partial results. A daily-limit error stops it immediately, since retrying can't help.
 - **Manual runs never alter the official record.** Daily results and the metrics history are produced only by the scheduled pipeline, so every day is scored the same way and the trend stays comparable. Manual comparisons are treated as investigations and saved separately.
 
 ### Running a manual comparison
 
-In the Actions tab, open Compare judge vs human → Run workflow, optionally enter a date (YYYY-MM-DD), and click Run workflow. Leaving the date empty uses today.
+In the **Actions** tab, open **Compare judge vs human → Run workflow**, optionally enter a date (`YYYY-MM-DD`), and click **Run workflow**. Leaving the date empty uses today.
 
-Manual runs are kept separate from the daily record. Each one is saved to comparisons/manual-runs/ with the run's date and time in the file name, so repeated runs never overwrite each other. They don't change the daily files in comparisons/results/ or metrics_history.csv, and the run's summary page notes that it was a manual run.
+Manual runs are kept separate from the daily record. Each one is saved to `comparisons/manual-runs/` with the run's date and time in the file name, so repeated runs never overwrite each other. They don't change the daily files in `comparisons/results/` or `metrics_history.csv`, and the run's summary page notes that it was a manual run.
 
-A manual comparison re-scores the judge labels already saved for that date; it doesn't call the judge again. It's useful for checking the effect of changes to the scoring logic in compare.py.
+A manual comparison re-scores the judge labels already saved for that date; it doesn't call the judge again. It's useful for checking the effect of changes to the scoring logic in `compare.py`.
+
 ---
 
-## Project 2: Prompt Management with automatic regression testing after prompt update & promotion if pass
+## Project 2: Prompt management with regression testing and automatic promotion
 
 ### The judge
 
@@ -123,25 +128,41 @@ flowchart TD
     C -->|No| R[❌ Rejected<br/>production unchanged]
     C -->|Yes| D{Within 0.02 of<br/>production scores?}
     D -->|No| R
-    D -->|Yes| P[✅ Promoted<br/>replaces production_prompt.md<br/>becomes new baseline]
+    D -->|Yes| E{Catches every critical item<br/>production caught?}
+    E -->|No| R
+    E -->|Yes| P[✅ Promoted<br/>replaces production_prompt.md<br/>becomes new baseline]
 ```
 
 Any commit that changes the candidate prompt, the style guide, the golden set, or the thresholds triggers the **Prompt regression test** workflow. It:
 
 1. Runs the candidate prompt against every golden item.
-2. Calculates precision, recall, F1, and accuracy for detecting critical risks, plus category accuracy for correctly flagged items.
-3. Checks the scores against the thresholds in `eval_config.json` and against the current production prompt's scores.
-4. **Promotes** the candidate automatically if every check passes, or **rejects** it and leaves production untouched if any check fails.
+2. Calculates precision, recall, F1, accuracy, and Cohen's kappa for detecting critical risks, each with a 95% confidence interval, plus category accuracy for correctly flagged items.
+3. Checks the scores against the thresholds in `regression_config.json` and against the current production prompt's scores.
+4. Compares results item by item with the production prompt, and rejects the candidate if it misses any critical item that production caught.
+5. **Promotes** the candidate automatically if every check passes, or **rejects** it and leaves production untouched if any check fails.
 
-The run's summary page shows the candidate's scores next to production's, the result of each check, and a table of every item the judge got wrong, with the judge's reasoning. Every attempt is recorded in `regression_results/regression_history.csv`, and every promotion in `prompts/promotion_log.csv`.
+The run's summary page shows the candidate's scores next to production's, the result of each check, the critical items the candidate newly missed or newly caught, any new false alarms, and every item the judge got wrong, with its reasoning. Every attempt is recorded in `regression_results/regression_history.csv`, and every promotion in `prompts/promotion_log.csv`.
+
+### Run modes
+
+The workflow runs automatically in **test-and-promote** mode. From the **Actions** tab, **Prompt regression test → Run workflow** offers three modes:
+
+| Mode | What it does |
+|---|---|
+| `test-and-promote` | Tests the candidate and promotes it if every check passes |
+| `test-only` | Tests the candidate and reports the results, but never promotes. Useful for re-running the same candidate to see how much its scores vary. |
+| `rebaseline` | Re-scores the current production prompt and saves the results as the new baseline, without promoting anything. Use it after changing the model or the golden set, so candidates are compared with production under the same conditions. |
 
 ### Design decisions
 
 - **Recall has the highest threshold.** Missing a real business risk is usually more costly than a false alarm a reviewer can dismiss, so the bar for catching risks is set higher than the bar for precision.
 - **Regression is checked separately from thresholds.** A candidate that clears the absolute thresholds but performs worse than the current production prompt is still rejected.
 - **Prompt examples are kept out of the golden set.** The few-shot examples inside the prompt don't appear in the golden data, so the test measures whether the prompt generalizes rather than whether the model can repeat its examples.
-- **Thresholds live in configuration.** They can be tuned in `eval_config.json` without code changes, and changing them triggers a fresh test.
+- **Thresholds live in configuration.** They can be tuned in `regression_config.json` without code changes, and changing them triggers a fresh test.
 - **Incomplete runs can't be promoted.** If the judge fails to answer any golden item, the candidate is rejected.
+- **Item-level regression gate.** With a small golden set, one item changes recall by about 0.08, so aggregate scores can't distinguish small real differences from noise. The most meaningful regression check is concrete: the candidate must still catch every critical item the production prompt caught. The summary names any newly missed items, which also makes rejections easy to act on. The gate can be switched off with `block_new_misses` in `regression_config.json`.
+- **Confidence intervals are reported, not gated.** With 13 critical items, even a perfect recall has a 95% lower bound of about 0.77, so requiring the lower bound to clear a threshold would block every prompt. The intervals are shown so each decision is read with its uncertainty, and could become part of the gate once the golden set is much larger.
+- **Baselines are tied to a model.** The baseline records which model produced it, and the summary warns when a candidate is tested on a different model, since score changes could then come from the model rather than the prompt.
 
 ---
 
@@ -149,21 +170,21 @@ The run's summary page shows the candidate's scores next to production's, the re
 
 1. **Add the repository secrets** under **Settings → Secrets and variables → Actions**:
    - `HF_TOKEN`: a Hugging Face access token (read access)
-   - `GROQ_API_KEY`: a GROQ API key
+   - `GROQ_API_KEY`: a Groq API key, from console.groq.com
 2. **Allow workflows to commit** under **Settings → Actions → General → Workflow permissions** by selecting **Read and write permissions**.
-3. **Run the workflows** from the **Actions** tab, or let them run on their own: the daily-exports runs daily, and the regression test runs whenever the business-risk files change.
+3. **Run the workflows** from the **Actions** tab, or let them run on their own: the daily-exports pipeline runs daily, and the regression test runs whenever the prompt, style guide, golden set, or configuration changes.
 
 ### Tech stack
 
-Python 3.12 · GitHub Actions · Hugging Face Hub · Groq API
+Python 3.12 · GitHub Actions · Hugging Face Hub · Groq API (`openai/gpt-oss-120b`)
 
 ---
 
 ## Limitations and next steps
 
-- **Small golden set.** With 13 critical examples, a single miss lowers recall by about 0.08. A larger and more varied golden set would give steadier scores.
+- **Small golden set.** With 13 critical examples, a single miss lowers recall by about 0.08, and the confidence intervals are wide. A larger and more varied golden set, with at least 100 critical examples, would give steadier scores and make it practical to gate promotion on confidence intervals.
 - **LLM non-determinism.** Even at temperature 0, results can vary slightly between runs, so a borderline candidate may pass one run and fail the next. Averaging several runs per evaluation would make promotion decisions more robust.
-- **Span-level agreement.** The MQM comparison works at the translation level. Measuring overlap between the exact error spans flagged by the judge and by humans would give a finer-grained view.
+- **Span-level agreement.** The daily comparison works at the translation level. Measuring overlap between the exact error spans flagged by the judge and by humans would give a finer-grained view.
 - **Connecting the projects.** A natural next step is to have the daily pipeline load the promoted `production_prompt.md`, so an approved prompt goes into use automatically the next day.
 - **Free-tier constraints.** Batch sizes and pacing are tuned for Groq's free tier. A paid tier would allow larger daily batches and one-item-per-request judging.
 
@@ -171,10 +192,10 @@ Python 3.12 · GitHub Actions · Hugging Face Hub · Groq API
 
 ## Data and attribution
 
-The daily-exports uses English→German translations with expert MQM error annotations from the WMT shared tasks, accessed through the [`RicardoRei/wmt-mqm-error-spans`](https://huggingface.co/datasets/RicardoRei/wmt-mqm-error-spans) dataset on Hugging Face. See the dataset card for its sources and license terms.
+The daily-exports pipeline uses English→German translations with expert MQM error annotations from the WMT shared tasks, accessed through the [`RicardoRei/wmt-mqm-error-spans`](https://huggingface.co/datasets/RicardoRei/wmt-mqm-error-spans) dataset on Hugging Face. See the dataset card for its sources and license terms.
 
 The business-risk golden set, style guide, and brand names (NovaPay, QuickSend) are synthetic examples created for this project.
 
 ---
 
-**Author:** [Laura Gomez Chacon] · [LinkedIn](https://www.linkedin.com/in/laura-gomez-chacon-40b47022)
+**Author:** Laura Gomez Chacon · [LinkedIn](https://www.linkedin.com/in/laura-gomez-chacon-40b47022)
