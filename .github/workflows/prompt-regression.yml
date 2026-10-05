@@ -5,7 +5,7 @@ on:
       - "prompt-management/prompts/candidate_prompt.md"
       - "prompt-management/prompts/style_guide_de.md"
       - "prompt-management/golden/**"
-      - "prompt-management/eval_config.json"
+      - "prompt-management/regression_config.json"
   workflow_dispatch:
     inputs:
       mode:

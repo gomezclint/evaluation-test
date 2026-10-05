@@ -8,7 +8,7 @@ Modes:
 
 A candidate is promoted only if it:
   1. answers every golden item,
-  2. meets the thresholds in eval_config.json,
+  2. meets the thresholds in regression_config.json,
   3. scores no more than max_drop_vs_production below the production baseline, and
   4. (if block_new_misses is on) catches every critical item the production prompt caught.
 """
@@ -17,7 +17,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 import requests
 
-CONFIG = json.loads(Path("eval_config.json").read_text(encoding="utf-8"))
+CONFIG = json.loads(Path("regression_config.json").read_text(encoding="utf-8"))
 MODEL = CONFIG["model"]
 API_URL = "https://api.groq.com/openai/v1/chat/completions"
 GROUP_SIZE = 10   # golden items sent to the judge per request
