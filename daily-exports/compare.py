@@ -1,5 +1,5 @@
 """Step 3: Compare the LLM judge's labels with the human annotations and calculate metrics.
-Outputs: comparisons/<date>_judge_comparison.csv, comparisons/metrics_history.csv, and the run's summary page."""
+Outputs: comparisons/results/<date>_judge_comparison.csv, comparisons/metrics_history.csv, and the run's summary page."""
 import csv, os, sys
 from datetime import date
 from pathlib import Path
@@ -78,8 +78,9 @@ for label in LABELS:
 macro_f1 = sum(m["f1"] for m in per_label.values()) / len(LABELS)
 
 # 5. Save the side-by-side comparison
-OUT_DIR.mkdir(exist_ok=True)
-out = OUT_DIR / f"{today}_judge_comparison.csv"
+RESULTS_DIR = OUT_DIR / "results"
+RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+out = RESULTS_DIR / f"{today}_judge_comparison.csv"
 with out.open("w", newline="", encoding="utf-8") as f:
     writer = csv.DictWriter(f, fieldnames=results[0].keys())
     writer.writeheader()
