@@ -3,3 +3,4 @@ timestamp,prompt_hash,golden_items,precision,recall,f1,accuracy,category_accurac
 2026-10-04T01:33:51+00:00,17370ebf,26,1.00,1.00,1.00,1.00,0.92,PROMOTED,,
 2026-10-04T02:04:12+00:00,17370ebf,26,1.00,1.00,1.00,1.00,0.92,PROMOTED,,
 2026-10-05T22:20:50+00:00,17370ebf,26,1.00,1.00,1.00,1.00,0.92,PROMOTED,openai/gpt-oss-120b,1.00
+2026-10-05T22:23:57+00:00,17370ebf,26,1.00,1.00,1.00,1.00,0.92,"PASSED (test only, not promoted)",openai/gpt-oss-120b,1.00
