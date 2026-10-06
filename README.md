@@ -64,7 +64,7 @@ evaluation-test/
     ├── golden/
     │   └── business_risk_golden.csv
     └── regression_results/         # Per-run results + regression_history.csv
-    
+
 ```
 
 ---
@@ -185,6 +185,46 @@ The workflow runs automatically in **test-and-promote** mode. From the **Actions
 - **Item-level regression gate.** With a small golden set, one item changes recall by about 0.08, so aggregate scores can't distinguish small real differences from noise. The most meaningful regression check is concrete: the candidate must still catch every critical item the production prompt caught. The summary names any newly missed items, which also makes rejections easy to act on. The gate can be switched off with `block_new_misses` in `regression_config.json`.
 - **Confidence intervals are reported, not gated.** With 13 critical items, even a perfect recall has a 95% lower bound of about 0.77, so requiring the lower bound to clear a threshold would block every prompt. The intervals are shown so each decision is read with its uncertainty, and could become part of the gate once the golden set is much larger.
 - **Baselines are tied to a model.** The baseline records which model produced it, and the summary warns when a candidate is tested on a different model, since score changes could then come from the model rather than the prompt.
+
+---
+
+## Monitoring, alerting, and SQL analysis
+
+The daily pipeline doesn't just report results: it watches them. After each daily comparison, alert rules check the latest results, and SQL queries summarize the full history. Both feed the dashboard.
+
+### Alert rules
+
+`analysis/check_alerts.py` checks four rules. The thresholds live in `analysis/alerts_config.json`.
+
+| Rule | Fires when |
+|---|---|
+| Weighted kappa below floor | The latest weighted kappa is below 0.40 (moderate agreement) |
+| Major errors under-called | The judge calls fewer than 60% of linguist-marked major errors major. Skipped on days with fewer than 3 major errors, since recall on one or two examples is noise. |
+| Sudden drop in agreement | The latest weighted kappa is more than 0.15 below the median of the previous 7 days |
+| No fresh daily results | There are no results for today. Checked by a separate morning workflow, so it fires even if the pipeline never ran. |
+
+When a rule fires, the workflow opens a GitHub issue labeled `eval-alert`, and GitHub sends a notification. If an issue for that rule is already open, it adds a comment instead of opening a duplicate, and it closes the issue automatically once the rule passes again. While an alert is firing, the dashboard shows a banner on every tab.
+
+### SQL analysis
+
+`analysis/db.py` loads the result files into SQL tables (`daily_history`, `daily_results`, `regression_history`, and `regression_items`). Each file in `analysis/queries/` answers one evaluation question:
+
+| Query | Question |
+|---|---|
+| `01_judge_bias.sql` | When the judge disagrees with the linguists, does it tend to under-call or over-call severity? |
+| `02_weekly_trend.sql` | How do accuracy and agreement move week to week? |
+| `03_rolling_baseline.sql` | Is each day's weighted kappa in line with the median of the 7 days before it? |
+| `04_hardest_golden_items.sql` | Which golden items do prompt versions get wrong most often? |
+
+`analysis/run_queries.py` runs every query after each daily comparison and writes the results to `analysis/reports/`. The dashboard's **SQL insights** tab shows each query's latest results next to its code. To add an analysis, add a new `.sql` file to `analysis/queries/`.
+
+### Design decisions
+
+- **Compare against a rolling median, not yesterday.** With 20 translations a day, scores move by chance. Comparing with the median of the previous 7 days keeps a single noisy day from triggering an alert, while still catching a real drop.
+- **No data is its own alert.** If the daily export fails, the comparison never runs, so quality rules alone would never fire. A separate morning check catches a pipeline that has silently stopped.
+- **Avoid alert fatigue.** One issue per rule, updated with comments while it fires, and closed automatically on recovery. Rules that need a minimum number of examples are skipped rather than firing on too little data.
+- **One definition of each metric.** The drop alert and the rolling-baseline report run the same SQL file, so the alert, the report, and the dashboard can never disagree.
+- **SQL for data, Python for logic.** Queries define and aggregate the metrics, because SQL is declarative, readable by other teams, and runs where production data typically lives. Python handles the API calls, the alert lifecycle, and statistics like confidence intervals. The demo uses SQLite, which is built into Python; in production, the same queries would run against a data warehouse with minor dialect changes.
 
 ---
 
