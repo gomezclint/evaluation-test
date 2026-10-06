@@ -238,7 +238,7 @@ When a rule fires, the workflow opens a GitHub issue labeled `eval-alert`, and G
 
 ### Tech stack
 
-Python 3.12 · GitHub Actions · Hugging Face Hub · Groq API (`openai/gpt-oss-120b`)
+Python 3.12 · SQL (SQLite) · GitHub Actions · Hugging Face Hub · Groq API (`openai/gpt-oss-120b`)
 
 ---
 
@@ -249,6 +249,7 @@ Python 3.12 · GitHub Actions · Hugging Face Hub · Groq API (`openai/gpt-oss-1
 - **Span-level agreement.** The daily comparison works at the translation level. Measuring overlap between the exact error spans flagged by the judge and by humans would give a finer-grained view.
 - **Connecting the projects.** A natural next step is to have the daily pipeline load the promoted `production_prompt.md`, so an approved prompt goes into use automatically the next day.
 - **Free-tier constraints.** Batch sizes and pacing are tuned for Groq's free tier. A paid tier would allow larger daily batches and one-item-per-request judging.
+- **Production data store.** Results are stored as CSV files and queried with SQLite. At scale, they would live in a data warehouse, with the same queries run there and alerts routed to a team channel.
 
 ---
 
