@@ -11,6 +11,7 @@ on:
 
 permissions:
   contents: write
+  issues: write          # lets the alert check open, comment on, and close issues
 
 jobs:
   compare:
@@ -28,11 +29,21 @@ jobs:
         env:
           RUN_DATE: ${{ github.event.inputs.date }}
           RUN_MODE: ${{ github.event_name == 'workflow_dispatch' && 'manual' || 'daily' }}
+      - name: Check alerts
+        if: github.event_name != 'workflow_dispatch'   # daily runs only
+        working-directory: .
+        run: python analysis/check_alerts.py
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - name: Run SQL analysis
+        if: github.event_name != 'workflow_dispatch'   # daily runs only
+        working-directory: .
+        run: python analysis/run_queries.py
       - name: Commit results
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add comparisons/
+          git add comparisons/ ../analysis/
           git diff --cached --quiet && exit 0
           git commit -m "Judge comparison $(date -u +%F)"
           git pull --rebase

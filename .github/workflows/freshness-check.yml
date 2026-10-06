@@ -1,0 +1,31 @@
+name: Data freshness check
+on:
+  schedule:
+    - cron: "0 7 * * *"   # 3 hours after the daily export (04:00 UTC)
+  workflow_dispatch:
+
+permissions:
+  contents: write        # saves the alert status for the dashboard
+  issues: write
+
+jobs:
+  freshness:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Check that today's results exist
+        run: python analysis/check_alerts.py --freshness
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - name: Save alert status
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add analysis/reports/alerts.json
+          git diff --cached --quiet && exit 0
+          git commit -m "Freshness check $(date -u +%F)"
+          git pull --rebase
+          git push

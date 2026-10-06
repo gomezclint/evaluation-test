@@ -1,0 +1,8 @@
+{
+  "weighted_kappa_floor": 0.40,
+  "major_recall_floor": 0.60,
+  "major_recall_min_examples": 3,
+  "kappa_drop_max": 0.15,
+  "kappa_drop_min_days": 3,
+  "max_data_age_days": 0
+}

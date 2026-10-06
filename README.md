@@ -19,12 +19,28 @@ Together they demonstrate an end-to-end approach to LLM-as-judge evaluation: bli
 evaluation-test/
 ├── .github/workflows/
 │   ├── daily-export.yml            # Daily export + LLM judge labeling
-│   ├── compare.yml                 # Judge vs. human metrics (runs after the export)
+│   ├── compare.yml                 # Judge vs. human metrics, alerts, and SQL report (runs after the export)
+│   ├── freshness-check.yml         # Morning check that today's results exist
 │   └── prompt-regression.yml       # Prompt management: test and auto-promote prompt changes
-├── requirements.txt
+├── .gitignore                      # Keeps Python cache files out of the repo
 ├── .nojekyll                       # Tells GitHub Pages to serve files as-is
+├── requirements.txt
 ├── dashboard/
 │   └── index.html                  # Results dashboard (GitHub Pages)
+├── analysis/
+│   ├── db.py                       # Loads the result files into SQL tables
+│   ├── run_queries.py              # Runs every query and writes the report
+│   ├── check_alerts.py             # Checks alert rules and opens or closes GitHub issues
+│   ├── alerts_config.json          # Alert thresholds
+│   ├── queries/                    # One SQL file per analysis question
+│   │   ├── 01_judge_bias.sql
+│   │   ├── 02_weekly_trend.sql
+│   │   ├── 03_rolling_baseline.sql
+│   │   └── 04_hardest_golden_items.sql
+│   └── reports/
+│       ├── latest.md               # Latest SQL report
+│       ├── latest.json             # Latest SQL results, read by the dashboard
+│       └── alerts.json             # Current status of each alert rule, read by the dashboard
 ├── daily-exports/
 │   ├── export.py                   # Pulls human-annotated translations
 │   ├── judge.py                    # Labels translations with the LLM judge
@@ -48,6 +64,7 @@ evaluation-test/
     ├── golden/
     │   └── business_risk_golden.csv
     └── regression_results/         # Per-run results + regression_history.csv
+    
 ```
 
 ---

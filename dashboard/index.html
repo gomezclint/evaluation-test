@@ -180,6 +180,15 @@
   .tile.FP { background: var(--minor); border-color: var(--minor); color: #fff; }
   .tile.NA { background: repeating-linear-gradient(45deg, var(--surface), var(--surface) 4px, var(--rule) 4px, var(--rule) 6px); }
 
+  .alert-banner { margin: 24px 0 0; padding: 14px 18px; border-left: 4px solid var(--major); background: var(--major-tint); border-radius: 0 6px 6px 0; }
+  .alert-banner strong { display: block; font-weight: 600; margin-bottom: 4px; }
+  .alert-banner ul { margin: 0; padding-left: 18px; }
+  .alert-banner li { margin: 3px 0; }
+  .alert-banner .when { font-size: .82rem; color: var(--muted); margin-top: 6px; }
+  .bar { display: inline-block; vertical-align: middle; height: 8px; width: calc(var(--w) * 0.9); max-width: 90px; min-width: 2px; background: var(--judge); opacity: .55; border-radius: 4px; margin-left: 8px; }
+  details.sql { margin: 10px 0 0; }
+  details.sql summary { cursor: pointer; color: var(--judge); font-size: .9rem; }
+  details.sql pre { background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 14px; overflow-x: auto; font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; margin: 8px 0 0; }
   .notice { border-left: 3px solid var(--minor); padding: 10px 14px; background: var(--surface); margin: 18px 0 0; max-width: 72ch; font-size: .93rem; }
   .empty { color: var(--muted); padding: 18px 0; }
   footer { margin-top: 56px; padding-top: 16px; border-top: 1px solid var(--rule); color: var(--muted); font-size: .85rem; }
@@ -207,8 +216,10 @@
     <nav class="tabs" role="tablist" aria-label="Dashboard views">
       <button role="tab" id="tab-daily" aria-controls="view-daily" aria-selected="true">Daily agreement</button>
       <button role="tab" id="tab-prompts" aria-controls="view-prompts" aria-selected="false" tabindex="-1">Prompt promotions</button>
+      <button role="tab" id="tab-insights" aria-controls="view-insights" aria-selected="false" tabindex="-1">SQL insights</button>
     </nav>
   </header>
+  <div id="alert-banner" class="alert-banner" role="status" hidden></div>
 
   <!-- ===================== DAILY AGREEMENT ===================== -->
   <section class="view" id="view-daily" role="tabpanel" aria-labelledby="tab-daily">
@@ -281,6 +292,22 @@
     <div class="scroll-x" id="promotions"></div>
   </section>
 
+  <!-- ===================== SQL INSIGHTS ===================== -->
+  <section class="view" id="view-insights" role="tabpanel" aria-labelledby="tab-insights" hidden>
+    <div class="lede">
+      <div>
+        <h1 id="insights-headline">Loading SQL analysis…</h1>
+        <p class="sub" id="insights-sub"></p>
+      </div>
+    </div>
+
+    <h2>Alert rules</h2>
+    <p class="help">Checked after every daily comparison, and separately each morning for fresh data. A firing rule opens a GitHub issue that closes itself when the rule passes again.</p>
+    <div class="scroll-x" id="alert-table"></div>
+
+    <div id="queries"></div>
+  </section>
+
   <footer>
     Data is read straight from this repository's result files, so the dashboard updates with every pipeline run.
     <span id="loaded-at"></span>
@@ -300,6 +327,9 @@ const FILES = {
   promotionLog:      "../prompt-management/prompts/promotion_log.csv",
   productionMetrics: "../prompt-management/prompts/production_metrics.json",
   config:            "../prompt-management/regression_config.json",
+  sqlReport:         "../analysis/reports/latest.json",
+  alerts:            "../analysis/reports/alerts.json",
+  sqlQuery:          (file) => `../analysis/queries/${file}`,
 };
 
 const LABELS = ["no error", "minor", "major"];
@@ -720,8 +750,108 @@ function renderPromotions(log) {
   $("promotions").innerHTML = t + "</tbody></table>";
 }
 
+
+/* ================= SQL INSIGHTS + ALERTS ================= */
+const pretty = (col) => col.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase());
+
+function repoLink(path) {
+  // On GitHub Pages (<owner>.github.io/<repo>/...), link to the file on GitHub
+  const h = location.hostname;
+  if (!h.endsWith(".github.io")) return null;
+  const owner = h.split(".")[0], repo = location.pathname.split("/").filter(Boolean)[0];
+  return repo ? `https://github.com/${owner}/${repo}/blob/main/${path}` : null;
+}
+
+function cellHTML(col, v) {
+  if (v === null || v === undefined || v === "") return "";
+  if (typeof v === "number") {
+    if (/percent/.test(col)) return `${v}%<span class="bar" style="--w:${Math.max(0, Math.min(100, v))}px"></span>`;
+    return Number.isInteger(v) ? String(v) : v.toFixed(2);
+  }
+  return esc(v);
+}
+
+async function initInsights() {
+  const [report, alerts] = await Promise.all([load(FILES.sqlReport, "json"), load(FILES.alerts, "json")]);
+  renderAlerts(alerts);
+
+  if (!report) {
+    $("insights-headline").textContent = "No SQL analysis yet.";
+    $("insights-sub").textContent = "The report is created after the next daily comparison runs.";
+    return;
+  }
+  // Headline from the judge-bias query, when it has data
+  const bias = (report.queries || []).find((q) => q.file.startsWith("01_") && q.status === "ok" && q.rows.length);
+  if (bias) {
+    const col = (name) => bias.columns.indexOf(name);
+    const get = (label) => bias.rows.find((r) => String(r[col("outcome")]).startsWith(label));
+    const under = get("Judge under"), over = get("Judge over");
+    const u = under ? under[col("translations")] : 0, o = over ? over[col("translations")] : 0;
+    const missed = under ? under[col("of_which_missed_majors")] : 0;
+    $("insights-headline").textContent = u === o
+      ? "When the judge disagrees with the linguists, it under-calls and over-calls severity equally often."
+      : `When the judge disagrees with the linguists, it more often ${u > o ? "under-calls" : "over-calls"} severity.`;
+    $("insights-sub").textContent = `${u} under-calls and ${o} over-calls across all days so far` +
+      (missed ? `, including ${missed} missed major errors.` : ".") +
+      ` Generated ${fmtTime(report.generated_at)}. Every table below is one SQL query, and you can open its exact code.`;
+  } else {
+    $("insights-headline").textContent = "SQL analysis of all evaluation results.";
+    $("insights-sub").textContent = `Generated ${fmtTime(report.generated_at)}. Every table below is one SQL query, and you can open its exact code.`;
+  }
+
+  $("queries").innerHTML = (report.queries || []).map((q, i) => {
+    let body;
+    if (q.status !== "ok") body = `<p class="empty">${esc(q.message)}</p>`;
+    else if (!q.rows.length) body = `<p class="empty">The query returned no rows.</p>`;
+    else body = `<div class="scroll-x"><table class="data"><thead><tr>${q.columns.map((c) => `<th>${esc(pretty(c))}</th>`).join("")}</tr></thead><tbody>` +
+      q.rows.map((r) => `<tr>${r.map((v, j) => `<td>${cellHTML(q.columns[j], v)}</td>`).join("")}</tr>`).join("") + "</tbody></table></div>";
+    const link = repoLink(`analysis/queries/${q.file}`);
+    return `<h2>${esc(q.title)}</h2><p class="help">${esc(q.question)}</p>${body}
+      <details class="sql" data-file="${esc(q.file)}"><summary>Show the SQL (${esc(q.file)})</summary><pre>Loading…</pre>
+      ${link ? `<p class="help"><a href="${esc(link)}">View this query on GitHub</a></p>` : ""}</details>`;
+  }).join("");
+
+  $("queries").querySelectorAll("details.sql").forEach((d) => {
+    d.addEventListener("toggle", async () => {
+      if (!d.open || d.dataset.loaded) return;
+      try {
+        const res = await fetch(FILES.sqlQuery(d.dataset.file), { cache: "no-store" });
+        d.querySelector("pre").textContent = res.ok ? await res.text() : "Couldn't load this query file.";
+      } catch { d.querySelector("pre").textContent = "Couldn't load this query file."; }
+      d.dataset.loaded = "1";
+    });
+  });
+}
+
+function renderAlerts(alerts) {
+  const rules = alerts && alerts.rules ? Object.entries(alerts.rules) : [];
+  if (!rules.length) {
+    $("alert-table").innerHTML = `<p class="empty">No alert checks have run yet.</p>`;
+    return;
+  }
+  const stateInfo = {
+    firing: { cls: "rejected", label: "Firing" },
+    passing: { cls: "promoted", label: "Passing" },
+    no_data: { cls: "neutral", label: "Not enough data" },
+  };
+  $("alert-table").innerHTML = `<table class="data"><thead><tr><th>Rule</th><th>Status</th><th>Detail</th><th>Issue</th></tr></thead><tbody>` +
+    rules.map(([id, r]) => {
+      const st = stateInfo[r.state] || stateInfo.no_data;
+      return `<tr><td>${esc(r.name)}</td><td><span class="pill ${st.cls}">${st.label}</span></td><td>${esc(r.detail)}</td>
+        <td>${r.issue_url ? `<a href="${esc(r.issue_url)}">Open issue</a>` : ""}</td></tr>`;
+    }).join("") + "</tbody></table>";
+
+  const firing = rules.filter(([, r]) => r.state === "firing");
+  const banner = $("alert-banner");
+  if (!firing.length) { banner.hidden = true; return; }
+  banner.hidden = false;
+  banner.innerHTML = `<strong>${firing.length === 1 ? "1 evaluation alert is firing" : `${firing.length} evaluation alerts are firing`}</strong>
+    <ul>${firing.map(([, r]) => `<li>${esc(r.name)}: ${esc(r.detail)}${r.issue_url ? ` <a href="${esc(r.issue_url)}">Open issue</a>` : ""}</li>`).join("")}</ul>
+    <div class="when">Last checked ${esc(fmtTime(alerts.checked_at))}.</div>`;
+}
+
 /* ================= tabs ================= */
-const tabs = [$("tab-daily"), $("tab-prompts")];
+const tabs = [$("tab-daily"), $("tab-prompts"), $("tab-insights")];
 function showTab(tab, focus) {
   tabs.forEach((t) => {
     const on = t === tab;
@@ -729,7 +859,7 @@ function showTab(tab, focus) {
     $(t.getAttribute("aria-controls")).hidden = !on;
   });
   if (focus) tab.focus();
-  history.replaceState(null, "", tab.id === "tab-prompts" ? "#prompts" : "#daily");
+  history.replaceState(null, "", "#" + tab.id.replace("tab-", ""));
 }
 tabs.forEach((t, i) => {
   t.addEventListener("click", () => showTab(t));
@@ -737,10 +867,12 @@ tabs.forEach((t, i) => {
     if (e.key === "ArrowRight" || e.key === "ArrowLeft") showTab(tabs[(i + (e.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length], true);
   });
 });
-if (location.hash === "#prompts") showTab(tabs[1]);
+const fromHash = tabs.find((t) => "#" + t.id.replace("tab-", "") === location.hash);
+if (fromHash) showTab(fromHash);
 
 initDaily();
 initPrompts();
+initInsights();
 $("loaded-at").textContent = `Loaded ${new Date().toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}.`;
 </script>
 </body>
