@@ -1,0 +1,118 @@
+{
+  "generated_at": "2026-10-06T19:00:07+00:00",
+  "tables_loaded": {
+    "daily_history": 4,
+    "daily_results": 70,
+    "regression_history": 6,
+    "regression_items": 156
+  },
+  "queries": [
+    {
+      "file": "01_judge_bias.sql",
+      "title": "Judge bias across all days",
+      "question": "When the judge disagrees with the linguists, does it tend to under-call or over-call severity?",
+      "status": "ok",
+      "columns": [
+        "outcome",
+        "translations",
+        "percent",
+        "of_which_missed_majors"
+      ],
+      "rows": [
+        [
+          "Agreed",
+          35,
+          50.0,
+          0
+        ],
+        [
+          "Judge over-called severity",
+          25,
+          35.7,
+          0
+        ],
+        [
+          "Judge under-called severity",
+          10,
+          14.3,
+          3
+        ]
+      ],
+      "message": ""
+    },
+    {
+      "file": "02_weekly_trend.sql",
+      "title": "Weekly trend",
+      "question": "How do accuracy and agreement move week to week, and how many days is each week based on?",
+      "status": "ok",
+      "columns": [
+        "week_starting",
+        "days",
+        "avg_accuracy",
+        "avg_macro_f1",
+        "avg_weighted_kappa",
+        "lowest_weighted_kappa"
+      ],
+      "rows": [
+        [
+          "2026-10-05",
+          2,
+          0.53,
+          0.47,
+          0.58,
+          0.58
+        ],
+        [
+          "2026-09-28",
+          2,
+          0.45,
+          0.35,
+          null,
+          null
+        ]
+      ],
+      "message": ""
+    },
+    {
+      "file": "03_rolling_baseline.sql",
+      "title": "Daily agreement vs. its 7-day baseline",
+      "question": "Is each day's weighted kappa in line with the median of the 7 days before it? (The drop alert uses this logic.)",
+      "status": "ok",
+      "columns": [
+        "date",
+        "weighted_kappa",
+        "median_prior_7_days",
+        "difference",
+        "days_in_window"
+      ],
+      "rows": [
+        [
+          "2026-10-06",
+          0.58,
+          null,
+          null,
+          null
+        ]
+      ],
+      "message": ""
+    },
+    {
+      "file": "04_hardest_golden_items.sql",
+      "title": "Hardest golden items",
+      "question": "Which golden items do prompt versions get wrong most often? These point to prompt gaps or ambiguous items.",
+      "status": "ok",
+      "columns": [
+        "id",
+        "translation",
+        "expected",
+        "runs",
+        "wrong",
+        "percent_wrong",
+        "missed_risk",
+        "false_alarm"
+      ],
+      "rows": [],
+      "message": ""
+    }
+  ]
+}
