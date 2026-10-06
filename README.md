@@ -1,4 +1,4 @@
-# LLM Translation Evaluation Pipelines
+# LLM Translation Evaluation Pipeline
 
 Automated evaluation workflows for LLM-based translation quality assessment, built with Python and GitHub Actions. The repository contains two independent projects:
 
@@ -6,6 +6,8 @@ Automated evaluation workflows for LLM-based translation quality assessment, bui
 2. **Prompt management**: a prompt for detecting critical business risks in translations, with an automated regression test that promotes a new prompt version only when it meets quality thresholds and doesn't perform worse than the current production version.
 
 Together they demonstrate an end-to-end approach to LLM-as-judge evaluation: blind judging against human ground truth, calibration metrics tracked over time, golden-dataset regression testing, and threshold-gated prompt promotion.
+
+**[View the live results dashboard](https://gomezclint.github.io/evaluation-test/dashboard/)**
 
 > These projects are portfolio demonstrations of workflows I run professionally. All data is public, and the brand names, style guide, and risk definitions are fictional samples.
 
@@ -20,6 +22,9 @@ evaluation-test/
 │   ├── compare.yml                 # Judge vs. human metrics (runs after the export)
 │   └── prompt-regression.yml       # Prompt management: test and auto-promote prompt changes
 ├── requirements.txt
+├── .nojekyll                       # Tells GitHub Pages to serve files as-is
+├── dashboard/
+│   └── index.html                  # Results dashboard (GitHub Pages)
 ├── daily-exports/
 │   ├── export.py                   # Pulls human-annotated translations
 │   ├── judge.py                    # Labels translations with the LLM judge
