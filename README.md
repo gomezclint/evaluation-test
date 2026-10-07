@@ -36,7 +36,8 @@ evaluation-test/
 │   │   ├── 01_judge_bias.sql
 │   │   ├── 02_weekly_trend.sql
 │   │   ├── 03_rolling_baseline.sql
-│   │   └── 04_hardest_golden_items.sql
+│   │   ├──04_hardest_golden_items.sql
+│   │   └── 05_recall_by_category.sql
 │   └── reports/
 │       ├── latest.md               # Latest SQL report
 │       ├── latest.json             # Latest SQL results, read by the dashboard
