@@ -56,14 +56,20 @@ def kappa(pairs, weighted=False):
 
 
 def macro_f1_of(rows):
+    """Average F1 over the labels that appear in the data, from either the linguists or the judge.
+    A label nobody used that day is left out, instead of counting as an F1 of 0."""
+    present = [label for label in LABELS
+               if any(r["human_severity"] == label or r["llm_severity"] == label for r in rows)]
+    if not present:
+        return None
     total = 0.0
-    for label in LABELS:
+    for label in present:
         tp = sum(r["human_severity"] == label and r["llm_severity"] == label for r in rows)
         fp = sum(r["human_severity"] != label and r["llm_severity"] == label for r in rows)
         fn = sum(r["human_severity"] == label and r["llm_severity"] != label for r in rows)
         p, rc = safe_div(tp, tp + fp), safe_div(tp, tp + fn)
         total += safe_div(2 * p * rc, p + rc)
-    return total / len(LABELS)
+    return total / len(present)
 
 
 def bootstrap_ci(rows, stat, resamples=2000, seed=42):
@@ -209,9 +215,13 @@ lines = [f"## LLM judge vs. human MQM annotations ({today})", "",
          "| Label | Precision | Recall | F1 | Human count | LLM count |", "|---|---|---|---|---|---|"]
 for label in LABELS:
     m = per_label[label]
+    if m["support"] == 0 and m["llm_count"] == 0:  # nobody used this label: nothing to score
+        lines.append(f"| {label} | n/a | n/a | n/a | 0 | 0 |")
+        continue
     lines.append(f"| {label} | {fmt(m['precision'], m['precision_ci'], pct=True)} "
                  f"| {fmt(m['recall'], m['recall_ci'], pct=True)} | {m['f1']:.2f} "
                  f"| {m['support']} | {m['llm_count']} |")
+lines += ["", "_Macro-F1 averages only the labels that appear in the data that day._"]
 lines += ["", "**Confusion matrix** (rows = human, columns = LLM)", "",
           "| | " + " | ".join(LABELS) + " |", "|---" * 4 + "|"]
 for h in LABELS:
