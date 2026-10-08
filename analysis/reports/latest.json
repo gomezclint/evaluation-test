@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-10-07T04:20:02+00:00",
+  "generated_at": "2026-10-08T04:20:14+00:00",
   "tables_loaded": {
-    "daily_history": 5,
-    "daily_results": 90,
+    "daily_history": 6,
+    "daily_results": 109,
     "regression_history": 6,
     "regression_items": 156
   },
@@ -21,21 +21,21 @@
       "rows": [
         [
           "Agreed",
-          40,
-          44.4,
+          47,
+          43.1,
           0
         ],
         [
           "Judge over-called severity",
-          33,
-          36.7,
+          39,
+          35.8,
           0
         ],
         [
           "Judge under-called severity",
-          17,
-          18.9,
-          6
+          23,
+          21.1,
+          9
         ]
       ],
       "message": ""
@@ -56,10 +56,10 @@
       "rows": [
         [
           "2026-10-05",
-          3,
-          0.43,
-          0.38,
-          0.25,
+          4,
+          0.42,
+          0.37,
+          0.32,
           -0.08
         ],
         [
@@ -86,6 +86,13 @@
         "days_in_window"
       ],
       "rows": [
+        [
+          "2026-10-08",
+          0.46,
+          0.25,
+          0.21,
+          2
+        ],
         [
           "2026-10-07",
           -0.08,
@@ -119,6 +126,63 @@
         "false_alarm"
       ],
       "rows": [],
+      "message": ""
+    },
+    {
+      "file": "05_recall_by_category.sql",
+      "title": "Judge recall by risk category",
+      "question": "For each business-risk category, how many critical golden items does the judge catch, and did the latest prompt version help or hurt?",
+      "status": "ok",
+      "columns": [
+        "category",
+        "items",
+        "caught_latest",
+        "recall_latest_percent",
+        "recall_previous_percent",
+        "recall_all_runs_percent"
+      ],
+      "rows": [
+        [
+          "brand",
+          1,
+          1,
+          100.0,
+          100.0,
+          100.0
+        ],
+        [
+          "financial_numeric",
+          3,
+          3,
+          100.0,
+          100.0,
+          100.0
+        ],
+        [
+          "legal_privacy",
+          3,
+          3,
+          100.0,
+          100.0,
+          100.0
+        ],
+        [
+          "offensive",
+          1,
+          1,
+          100.0,
+          100.0,
+          100.0
+        ],
+        [
+          "safety",
+          5,
+          5,
+          100.0,
+          100.0,
+          100.0
+        ]
+      ],
       "message": ""
     }
   ]
