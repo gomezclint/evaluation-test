@@ -2,32 +2,32 @@
   "rules": {
     "freshness": {
       "name": "No fresh daily results",
-      "detail": "Latest daily results are from 2026-10-08.",
+      "detail": "Latest daily results are from 2026-10-09.",
       "state": "passing",
       "issue_url": null,
-      "checked_at": "2026-10-08T07:16:47+00:00"
+      "checked_at": "2026-10-09T04:21:00+00:00"
     },
     "kappa_floor": {
       "name": "Weighted kappa below floor",
-      "detail": "On 2026-10-08, weighted kappa was 0.46 (floor 0.40).",
-      "state": "passing",
-      "issue_url": null,
-      "checked_at": "2026-10-08T04:20:14+00:00"
+      "detail": "On 2026-10-09, weighted kappa was 0.26, below the floor of 0.40.",
+      "state": "firing",
+      "issue_url": "https://github.com/gomezclint/evaluation-test/issues/3",
+      "checked_at": "2026-10-09T04:21:02+00:00"
     },
     "major_recall": {
       "name": "Major errors under-called",
-      "detail": "On 2026-10-08, the judge called 1 of 4 linguist-marked major errors major (recall 0.25, floor 0.60).",
-      "state": "firing",
-      "issue_url": "https://github.com/gomezclint/evaluation-test/issues/1",
-      "checked_at": "2026-10-08T04:20:14+00:00"
+      "detail": "Only 0 major error(s) on the latest day; at least 3 are needed for a meaningful recall.",
+      "state": "no_data",
+      "issue_url": null,
+      "checked_at": "2026-10-09T04:21:02+00:00"
     },
     "kappa_drop": {
       "name": "Sudden drop in agreement",
-      "detail": "Fewer than 3 earlier days in the 7-day window.",
-      "state": "no_data",
-      "issue_url": null,
-      "checked_at": "2026-10-08T04:20:14+00:00"
+      "detail": "On 2026-10-09, weighted kappa was 0.26, compared with a 7-day median of 0.46 (3 days). That's a drop of 0.20, more than the allowed 0.15.",
+      "state": "firing",
+      "issue_url": "https://github.com/gomezclint/evaluation-test/issues/4",
+      "checked_at": "2026-10-09T04:21:03+00:00"
     }
   },
-  "checked_at": "2026-10-08T07:16:47+00:00"
+  "checked_at": "2026-10-09T04:21:03+00:00"
 }
