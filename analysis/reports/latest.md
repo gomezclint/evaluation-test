@@ -1,40 +1,41 @@
 # SQL analysis report
 
-Generated 2026-10-10 04:18 UTC from the repository's result files. Each section is one query in `analysis/queries/`.
+Generated 2026-10-11 04:18 UTC from the repository's result files. Each section is one query in `analysis/queries/`.
 
-Tables loaded: `daily_history` (8 rows), `daily_results` (149 rows), `regression_history` (6 rows), `regression_items` (156 rows)
+Tables loaded: `daily_history` (9 rows), `daily_results` (169 rows), `regression_history` (6 rows), `regression_items` (156 rows)
 
-## Judge bias across all days
+## Judge bias
 
-*When the judge disagrees with the linguists, does it tend to under-call or over-call severity?*
+*When the judge disagrees with linguists, does it under-call or over-call severity?*
 
 Query: `01_judge_bias.sql`
 
 | outcome | translations | percent | of_which_missed_majors |
 |---|---|---|---|
-| Agreed | 70 | 47 | 0 |
-| Judge over-called severity | 48 | 32.2 | 0 |
-| Judge under-called severity | 31 | 20.8 | 9 |
+| Agreed | 80 | 47.3 | 0 |
+| Judge over-called severity | 55 | 32.5 | 0 |
+| Judge under-called severity | 34 | 20.1 | 11 |
 
 ## Weekly trend
 
-*How do accuracy and agreement move week to week, and how many days is each week based on?*
+*How do accuracy and agreement change week to week?*
 
 Query: `02_weekly_trend.sql`
 
 | week_starting | days | avg_accuracy | avg_macro_f1 | avg_weighted_kappa | lowest_weighted_kappa |
 |---|---|---|---|---|---|
-| 2026-10-05 | 6 | 0.47 | 0.38 | 0.33 | -0.08 |
+| 2026-10-05 | 7 | 0.47 | 0.39 | 0.35 | -0.08 |
 | 2026-09-28 | 2 | 0.45 | 0.35 |  |  |
 
-## Daily agreement vs. its 7-day baseline
+## Kappa vs. 7-day median
 
-*Is each day's weighted kappa in line with the median of the 7 days before it? (The drop alert uses this logic.)*
+*Is each day's agreement in line with the week before? The drop alert uses this.*
 
 Query: `03_rolling_baseline.sql`
 
 | date | weighted_kappa | median_prior_7_days | difference | days_in_window |
 |---|---|---|---|---|
+| 2026-10-11 | 0.47 | 0.43 | 0.04 | 5 |
 | 2026-10-10 | 0.43 | 0.36 | 0.07 | 4 |
 | 2026-10-09 | 0.26 | 0.46 | -0.2 | 3 |
 | 2026-10-08 | 0.46 | 0.25 | 0.21 | 2 |
@@ -43,15 +44,15 @@ Query: `03_rolling_baseline.sql`
 
 ## Hardest golden items
 
-*Which golden items do prompt versions get wrong most often? These point to prompt gaps or ambiguous items.*
+*Which golden items do prompt versions get wrong most often?*
 
 Query: `04_hardest_golden_items.sql`
 
 The query returned no rows.
 
-## Judge recall by risk category
+## Recall by risk category
 
-*For each business-risk category, how many critical golden items does the judge catch, and did the latest prompt version help or hurt?*
+*Which risk categories does the judge miss, and did the latest prompt help?*
 
 Query: `05_recall_by_category.sql`
 

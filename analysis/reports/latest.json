@@ -1,16 +1,16 @@
 {
-  "generated_at": "2026-10-10T04:18:52+00:00",
+  "generated_at": "2026-10-11T04:18:57+00:00",
   "tables_loaded": {
-    "daily_history": 8,
-    "daily_results": 149,
+    "daily_history": 9,
+    "daily_results": 169,
     "regression_history": 6,
     "regression_items": 156
   },
   "queries": [
     {
       "file": "01_judge_bias.sql",
-      "title": "Judge bias across all days",
-      "question": "When the judge disagrees with the linguists, does it tend to under-call or over-call severity?",
+      "title": "Judge bias",
+      "question": "When the judge disagrees with linguists, does it under-call or over-call severity?",
       "status": "ok",
       "columns": [
         "outcome",
@@ -21,21 +21,21 @@
       "rows": [
         [
           "Agreed",
-          70,
-          47.0,
+          80,
+          47.3,
           0
         ],
         [
           "Judge over-called severity",
-          48,
-          32.2,
+          55,
+          32.5,
           0
         ],
         [
           "Judge under-called severity",
-          31,
-          20.8,
-          9
+          34,
+          20.1,
+          11
         ]
       ],
       "message": ""
@@ -43,7 +43,7 @@
     {
       "file": "02_weekly_trend.sql",
       "title": "Weekly trend",
-      "question": "How do accuracy and agreement move week to week, and how many days is each week based on?",
+      "question": "How do accuracy and agreement change week to week?",
       "status": "ok",
       "columns": [
         "week_starting",
@@ -56,10 +56,10 @@
       "rows": [
         [
           "2026-10-05",
-          6,
+          7,
           0.47,
-          0.38,
-          0.33,
+          0.39,
+          0.35,
           -0.08
         ],
         [
@@ -75,8 +75,8 @@
     },
     {
       "file": "03_rolling_baseline.sql",
-      "title": "Daily agreement vs. its 7-day baseline",
-      "question": "Is each day's weighted kappa in line with the median of the 7 days before it? (The drop alert uses this logic.)",
+      "title": "Kappa vs. 7-day median",
+      "question": "Is each day's agreement in line with the week before? The drop alert uses this.",
       "status": "ok",
       "columns": [
         "date",
@@ -86,6 +86,13 @@
         "days_in_window"
       ],
       "rows": [
+        [
+          "2026-10-11",
+          0.47,
+          0.43,
+          0.04,
+          5
+        ],
         [
           "2026-10-10",
           0.43,
@@ -127,7 +134,7 @@
     {
       "file": "04_hardest_golden_items.sql",
       "title": "Hardest golden items",
-      "question": "Which golden items do prompt versions get wrong most often? These point to prompt gaps or ambiguous items.",
+      "question": "Which golden items do prompt versions get wrong most often?",
       "status": "ok",
       "columns": [
         "id",
@@ -144,8 +151,8 @@
     },
     {
       "file": "05_recall_by_category.sql",
-      "title": "Judge recall by risk category",
-      "question": "For each business-risk category, how many critical golden items does the judge catch, and did the latest prompt version help or hurt?",
+      "title": "Recall by risk category",
+      "question": "Which risk categories does the judge miss, and did the latest prompt help?",
       "status": "ok",
       "columns": [
         "category",
