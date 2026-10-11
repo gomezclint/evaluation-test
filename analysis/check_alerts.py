@@ -48,13 +48,12 @@ def one(sql, params=()):
 # Each rule returns (firing, detail). firing is None when there isn't enough data to judge.
 def rule_freshness():
     if "daily_history" not in loaded:
-        return True, "There are no daily results in the repository at all."
+        return True, "No daily results in the repository."
     latest = date.fromisoformat(one("SELECT MAX(date) AS d FROM daily_history")["d"])
     age = (today - latest).days
     if age > CONFIG["max_data_age_days"]:
-        return True, (f"The latest daily results are from {latest}, {age} day(s) old. The daily export "
-                      "or the comparison probably failed or didn't run. Check the Actions tab.")
-    return False, f"Latest daily results are from {latest}."
+        return True, f"Latest results are {age} day(s) old ({latest}). Check the Actions tab."
+    return False, f"Latest results: {latest}."
 
 
 def latest_history():
@@ -64,16 +63,16 @@ def latest_history():
 def rule_kappa_floor():
     h = latest_history()
     if not h or h.get("weighted_kappa") is None:
-        return None, "No weighted kappa recorded for the latest day."
+        return None, "No kappa for the latest day."
     k, floor = h["weighted_kappa"], CONFIG["weighted_kappa_floor"]
     if k < floor:
-        return True, f"On {h['date']}, weighted kappa was {k:.2f}, below the floor of {floor:.2f}."
-    return False, f"On {h['date']}, weighted kappa was {k:.2f} (floor {floor:.2f})."
+        return True, f"{h['date']}: kappa {k:.2f}, below floor {floor:.2f}."
+    return False, f"{h['date']}: kappa {k:.2f} (floor {floor:.2f})."
 
 
 def rule_major_recall():
     if "daily_results" not in loaded:
-        return None, "No daily comparison files."
+        return None, "No daily comparisons yet."
     r = one("""
         SELECT date,
                SUM(human_severity = 'major') AS majors,
@@ -84,24 +83,22 @@ def rule_major_recall():
     need = CONFIG["major_recall_min_examples"]
     if not r or r["majors"] < need:
         n = r["majors"] if r else 0
-        return None, f"Only {n} major error(s) on the latest day; at least {need} are needed for a meaningful recall."
+        return None, f"Only {n} major error(s) on the latest day (need {need})."
     recall, floor = r["caught"] / r["majors"], CONFIG["major_recall_floor"]
-    detail = (f"On {r['date']}, the judge called {r['caught']} of {r['majors']} linguist-marked major errors major "
-              f"(recall {recall:.2f}, floor {floor:.2f}).")
+    detail = f"{r['date']}: {r['caught']} of {r['majors']} majors caught (recall {recall:.2f}, floor {floor:.2f})."
     return recall < floor, detail
 
 
 def rule_kappa_drop():
     if "daily_history" not in loaded:
-        return None, "No daily history."
+        return None, "No daily history yet."
     sql = (HERE / "queries" / "03_rolling_baseline.sql").read_text(encoding="utf-8")
     r = one(sql)  # first row = latest day
     if not r or r["median_prior_7_days"] is None or (r["days_in_window"] or 0) < CONFIG["kappa_drop_min_days"]:
-        return None, f"Fewer than {CONFIG['kappa_drop_min_days']} earlier days in the 7-day window."
+        return None, f"Need {CONFIG['kappa_drop_min_days']}+ earlier days to compare."
     drop, limit = -r["difference"], CONFIG["kappa_drop_max"]
-    detail = (f"On {r['date']}, weighted kappa was {r['weighted_kappa']:.2f}, compared with a 7-day median of "
-              f"{r['median_prior_7_days']:.2f} ({int(r['days_in_window'])} days).")
-    return drop > limit, detail + (f" That's a drop of {drop:.2f}, more than the allowed {limit:.2f}." if drop > limit else "")
+    detail = f"{r['date']}: kappa {r['weighted_kappa']:.2f} vs. 7-day median {r['median_prior_7_days']:.2f}"
+    return drop > limit, detail + (f", a drop of {drop:.2f} (limit {limit:.2f})." if drop > limit else ".")
 
 
 RULES = {"freshness": ("No fresh daily results", rule_freshness)}

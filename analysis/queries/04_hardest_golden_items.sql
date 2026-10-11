@@ -1,5 +1,5 @@
 -- Title: Hardest golden items
--- Question: Which golden items do prompt versions get wrong most often? These point to prompt gaps or ambiguous items.
+-- Question: Which golden items do prompt versions get wrong most often?
 -- Requires: regression_items
 SELECT
   id,

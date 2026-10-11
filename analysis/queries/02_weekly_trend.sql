@@ -1,5 +1,5 @@
 -- Title: Weekly trend
--- Question: How do accuracy and agreement move week to week, and how many days is each week based on?
+-- Question: How do accuracy and agreement change week to week?
 -- Requires: daily_history
 SELECT
   date(date, '-6 days', 'weekday 1') AS week_starting,

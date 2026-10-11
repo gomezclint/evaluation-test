@@ -186,8 +186,10 @@
   .alert-banner li { margin: 3px 0; }
   .alert-banner .when { font-size: .82rem; color: var(--muted); margin-top: 6px; }
   .bar { display: inline-block; vertical-align: middle; height: 8px; width: calc(var(--w) * 0.9); max-width: 90px; min-width: 2px; background: var(--judge); opacity: .55; border-radius: 4px; margin-left: 8px; }
-  details.sql { margin: 10px 0 0; }
-  details.sql summary { cursor: pointer; color: var(--judge); font-size: .9rem; }
+  details.sql { margin: 8px 0 0; }
+  td.clip { max-width: 34ch; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  details.more summary { cursor: pointer; color: var(--judge); font-size: .9rem; margin-top: 6px; }
+  details.sql summary { cursor: pointer; color: var(--muted, inherit); font-size: .85rem; }
   details.sql pre { background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 14px; overflow-x: auto; font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; margin: 8px 0 0; }
   .notice { border-left: 3px solid var(--minor); padding: 10px 14px; background: var(--surface); margin: 18px 0 0; max-width: 72ch; font-size: .93rem; }
   .empty { color: var(--muted); padding: 18px 0; }
@@ -237,31 +239,31 @@
     <div class="scale" id="scale" hidden>
       <div class="scale-track" id="scale-track"></div>
       <div class="scale-labels" id="scale-labels"></div>
-      <p class="scale-note">Weighted kappa on the standard agreement scale. The tall mark is the selected day; faint marks are the other days.</p>
+      <p class="scale-note">Weighted kappa. Tall mark: selected day. Faint marks: other days.</p>
     </div>
 
     <div class="figures" id="daily-figures"></div>
 
     <h2>Agreement over time</h2>
-    <p class="help">One point per daily run. Select a point to inspect that day.</p>
+    <p class="help">Click a point to open that day.</p>
     <div class="series-key" id="daily-key"></div>
     <div class="chart" id="daily-chart"></div>
 
     <div class="two-col">
       <div>
-        <h2>Where they disagree</h2>
-        <p class="help">Rows are the linguists' labels, columns the judge's. The outlined diagonal is agreement.</p>
+        <h2>Confusion matrix</h2>
+        <p class="help">Diagonal = agreement.</p>
         <div id="matrix"></div>
       </div>
       <div>
-        <h2>Per-label results</h2>
-        <p class="help">Linguists' labels are the ground truth. Brackets show 95% confidence intervals.</p>
+        <h2>Per label</h2>
+        <p class="help">Brackets: 95% confidence interval.</p>
         <div class="scroll-x" id="label-table"></div>
       </div>
     </div>
 
     <h2 id="disagree-title">Disagreements</h2>
-    <p class="help">Translations where the judge's overall severity differs from the linguists'.</p>
+    <p class="help">Judge severity ≠ linguists'.</p>
     <div id="disagreements"></div>
   </section>
 
@@ -276,7 +278,7 @@
     <div id="prompt-notice"></div>
 
     <h2>Regression runs</h2>
-    <p class="help">Each candidate prompt tested against the golden set. Dashed lines are the promotion thresholds. Select a run to see its item-by-item results.</p>
+    <p class="help">Dashed lines: promotion thresholds. Click a run for item results.</p>
     <div class="series-key" id="prompt-key"></div>
     <div class="chart" id="prompt-chart"></div>
 
@@ -301,15 +303,15 @@
       </div>
     </div>
 
-    <h2>Alert rules</h2>
-    <p class="help">Checked after every daily comparison, and separately each morning for fresh data. A firing rule opens a GitHub issue that closes itself when the rule passes again.</p>
+    <h2>Alerts</h2>
+    <p class="help">Checked daily. A firing alert opens a GitHub issue.</p>
     <div class="scroll-x" id="alert-table"></div>
 
     <div id="queries"></div>
   </section>
 
   <footer>
-    Data is read straight from this repository's result files, so the dashboard updates with every pipeline run.
+    Updates with every pipeline run.
     <span id="loaded-at"></span>
   </footer>
 </div>
@@ -475,7 +477,7 @@ async function initDaily() {
   const hist = await load(FILES.metricsHistory);
   if (!hist || !hist.length) {
     $("daily-headline").textContent = "No daily results yet.";
-    $("daily-sub").textContent = "Run the Daily export workflow from the Actions tab. Results appear here once the comparison finishes.";
+    $("daily-sub").textContent = "Run the Daily export workflow in Actions.";
     return;
   }
   daily.history = hist.filter((r) => r.date).sort((a, b) => a.date.localeCompare(b.date));
@@ -501,16 +503,16 @@ async function selectDay(i) {
 
   const acc = num(h.accuracy), wk = num(h.weighted_kappa), ck = num(h.cohen_kappa), mf = num(h.macro_f1), n = num(h.segments);
   if (wk != null) {
-    $("daily-headline").textContent = `On ${fmtDate(h.date)}, the judge and the linguists showed ${band(wk).name} agreement.`;
+    $("daily-headline").textContent = `${band(wk).name.charAt(0).toUpperCase() + band(wk).name.slice(1)} agreement on ${fmtShort(h.date)}`;
   } else {
-    $("daily-headline").textContent = `On ${fmtDate(h.date)}, the judge matched the linguists on ${pct(acc)} of translations.`;
+    $("daily-headline").textContent = `${pct(acc)} match on ${fmtShort(h.date)}`;
   }
-  let sub = `${n} translations compared.`;
+  let sub = `${n} translations`;
   if (rows) {
     const correct = rows.filter((r) => r.human_severity === r.llm_severity).length;
-    sub += ` Accuracy ${pct(acc)}, with a 95% confidence interval of ${ciText(wilson(correct, rows.length))}.`;
+    sub += ` · accuracy ${pct(acc)} (95% CI ${ciText(wilson(correct, rows.length))})`;
   }
-  if (wk == null) sub += " Kappa wasn't recorded for this day.";
+  if (wk == null) sub += " · no kappa";
   $("daily-sub").textContent = sub;
 
   renderScale(wk);
@@ -550,12 +552,12 @@ function renderScale(wk) {
 function renderFigures(h, prev) {
   const fig = (name, field, isPct) => {
     const v = num(h[field]), p = prev ? num(prev[field]) : null;
-    let detail = "No earlier day to compare";
+    let detail = "—";
     if (v != null && p != null) {
       const d = v - p, sign = d > 0 ? "+" : d < 0 ? "−" : "±";
       const cls = d > 0.005 ? "up" : d < -0.005 ? "down" : "";
       detail = `<span class="${cls}">${sign}${Math.abs(d).toFixed(2)}</span> vs ${esc(fmtShort(prev.date))}`;
-    } else if (v == null) detail = "Not recorded for this day";
+    } else if (v == null) detail = "Not recorded";
     return `<div class="figure"><div class="name">${name}</div><div class="value">${isPct ? pct(v) : dec(v)}</div><div class="detail">${detail}</div></div>`;
   };
   $("daily-figures").innerHTML =
@@ -563,7 +565,7 @@ function renderFigures(h, prev) {
 }
 
 function renderMatrix(rows) {
-  if (!rows) { $("matrix").innerHTML = `<p class="empty">The comparison file for this day isn't in the repository.</p>`; return; }
+  if (!rows) { $("matrix").innerHTML = `<p class="empty">No file for this day.</p>`; return; }
   const counts = LABELS.map((h) => LABELS.map((l) => rows.filter((r) => r.human_severity === h && r.llm_severity === l).length));
   const max = Math.max(1, ...counts.flat());
   let t = `<table class="matrix"><thead><tr><th></th>${LABELS.map((l) => `<th scope="col">${esc(l)}</th>`).join("")}</tr></thead><tbody>`;
@@ -580,7 +582,7 @@ function renderMatrix(rows) {
 }
 
 function renderLabelTable(rows) {
-  if (!rows) { $("label-table").innerHTML = `<p class="empty">The comparison file for this day isn't in the repository.</p>`; return; }
+  if (!rows) { $("label-table").innerHTML = `<p class="empty">No file for this day.</p>`; return; }
   let t = `<table class="data"><thead><tr><th>Label</th><th class="num">Precision</th><th class="num">Recall</th><th class="num">F1</th><th class="num">Linguists</th><th class="num">Judge</th></tr></thead><tbody>`;
   LABELS.forEach((lab) => {
     const tp = rows.filter((r) => r.human_severity === lab && r.llm_severity === lab).length;
@@ -599,10 +601,10 @@ function renderLabelTable(rows) {
 
 function renderDisagreements(rows, date) {
   const box = $("disagreements");
-  if (!rows) { box.innerHTML = `<p class="empty">The comparison file for this day isn't in the repository.</p>`; return; }
+  if (!rows) { box.innerHTML = `<p class="empty">No file for this day.</p>`; return; }
   const off = rows.filter((r) => r.human_severity !== r.llm_severity);
-  $("disagree-title").textContent = `Disagreements on ${fmtShort(date)} (${off.length} of ${rows.length})`;
-  if (!off.length) { box.innerHTML = `<p class="empty">The judge agreed with the linguists on every translation this day.</p>`; return; }
+  $("disagree-title").textContent = `Disagreements: ${off.length} of ${rows.length}`;
+  if (!off.length) { box.innerHTML = `<p class="empty">No disagreements.</p>`; return; }
   const pill = (s) => `<span class="pill ${s === "no error" ? "none" : esc(s)}">${esc(s)}</span>`;
   box.innerHTML = off.map((r) => `
     <div class="pair">
@@ -635,15 +637,15 @@ async function initPrompts() {
   if (prod) {
     const how = prod.source === "rebaseline" ? "re-baselined" : "promoted";
     const when = prod.created_at || prod.promoted_at;
-    $("prompt-headline").textContent = `Production prompt ${prod.prompt_hash} was ${how} on ${when ? fmtDate(when.slice(0, 10)) : "an unknown date"}.`;
+    $("prompt-headline").textContent = `Production prompt ${prod.prompt_hash}`;
     const m = prod.metrics || {};
-    $("prompt-sub").textContent = `Its golden-set scores: recall ${dec(m.recall)}, precision ${dec(m.precision)}, F1 ${dec(m.f1)}${prod.model ? `, measured with ${prod.model}` : ""}.`;
+    $("prompt-sub").textContent = `Precision ${dec(m.precision)} · recall ${dec(m.recall)} · F1 ${dec(m.f1)} · ${how} ${when ? fmtShort(when.slice(0, 10)) : ""}${prod.model ? ` · ${prod.model}` : ""}`;
     if (config && prod.model && config.model && prod.model !== config.model) {
-      $("prompt-notice").innerHTML = `<div class="notice">The baseline was measured with <b>${esc(prod.model)}</b>, but the configuration now uses <b>${esc(config.model)}</b>. Run the regression workflow in rebaseline mode so candidates are compared on the same model.</div>`;
+      $("prompt-notice").innerHTML = `<div class="notice">Model changed: baseline used <b>${esc(prod.model)}</b>, config now uses <b>${esc(config.model)}</b>. Run the regression workflow in rebaseline mode.</div>`;
     }
   } else {
-    $("prompt-headline").textContent = "No production prompt has been promoted yet.";
-    $("prompt-sub").textContent = "Commit a change to candidate_prompt.md, or run the Prompt regression test workflow, to create the first baseline.";
+    $("prompt-headline").textContent = "No production prompt yet";
+    $("prompt-sub").textContent = "Edit candidate_prompt.md or run the Prompt regression test workflow.";
   }
 
   renderPromotions(log);
@@ -664,9 +666,9 @@ async function initPrompts() {
     { name: "Rebaselined", color: "var(--judge)", shape: "diamond" },
   ]);
   key($("tile-key"), [
-    { name: "Caught a real risk", color: "var(--ok-tint)", shape: "square" },
-    { name: "Correctly left alone", color: "var(--surface)", shape: "square" },
-    { name: "Missed a real risk", color: "var(--major)", shape: "square" },
+    { name: "Caught", color: "var(--ok-tint)", shape: "square" },
+    { name: "Correctly clear", color: "var(--surface)", shape: "square" },
+    { name: "Missed", color: "var(--major)", shape: "square" },
     { name: "False alarm", color: "var(--minor)", shape: "square" },
   ]);
   selectRun(prompts.runs.length - 1);
@@ -720,18 +722,18 @@ async function renderRun(run) {
   const path = FILES.regressionRun(runStamp(run.timestamp), run.prompt_hash);
   if (!(path in prompts.cache)) prompts.cache[path] = await load(path);
   const items = prompts.cache[path], d = decisionInfo(run.decision);
-  $("run-title").textContent = `Golden set results for ${run.prompt_hash}, ${fmtTime(run.timestamp)}`;
+  $("run-title").textContent = `Golden set: ${run.prompt_hash}, ${fmtShort(run.timestamp.slice(0, 10))}`;
   if (!items) {
-    $("run-help").textContent = "The item-by-item file for this run isn't in the repository.";
+    $("run-help").textContent = "Item file not found for this run.";
     $("tiles").innerHTML = ""; $("run-misses").innerHTML = ""; return;
   }
   const wrong = items.filter((r) => ["FN", "FP", "NO ANSWER"].includes(r.outcome));
-  $("run-help").textContent = `${d.label}. The judge got ${items.length - wrong.length} of ${items.length} golden items right. Hover a tile for its translation.`;
+  $("run-help").textContent = `${d.label} · ${items.length - wrong.length}/${items.length} correct · hover a tile for its text`;
   $("tiles").innerHTML = items.map((r) => {
     const cls = r.outcome === "NO ANSWER" ? "NA" : r.outcome;
     return `<div class="tile ${esc(cls)}" title="${esc(r.translation_de)} (${esc(r.outcome)})">${esc(r.id)}</div>`;
   }).join("");
-  if (!wrong.length) { $("run-misses").innerHTML = `<p class="empty">No mistakes on the golden set in this run.</p>`; return; }
+  if (!wrong.length) { $("run-misses").innerHTML = `<p class="empty">No mistakes.</p>`; return; }
   const outcomeLabel = { FN: "Missed risk", FP: "False alarm", "NO ANSWER": "No answer" };
   let t = `<table class="data"><thead><tr><th>Item</th><th>Result</th><th>Translation</th><th>Expected</th><th>Judge's reason</th></tr></thead><tbody>`;
   wrong.forEach((r) => {
@@ -771,44 +773,68 @@ function cellHTML(col, v) {
   return esc(v);
 }
 
+/* Short column labels; anything not listed falls back to pretty() */
+const COLUMN_LABELS = {
+  outcome: "Outcome", translations: "Count", percent: "%", of_which_missed_majors: "Missed majors",
+  week_starting: "Week of", days: "Days", avg_accuracy: "Accuracy", avg_macro_f1: "Macro-F1",
+  avg_weighted_kappa: "Kappa", lowest_weighted_kappa: "Lowest kappa",
+  weighted_kappa: "Kappa", median_prior_7_days: "7-day median", difference: "Change", days_in_window: "Days",
+  translation: "Translation", expected: "Expected", runs: "Runs", wrong: "Wrong", percent_wrong: "% wrong",
+  missed_risk: "Missed", false_alarm: "False alarm",
+  category: "Category", items: "Items", caught_latest: "Caught",
+  recall_latest_percent: "Recall now", recall_previous_percent: "Recall before", recall_all_runs_percent: "Recall, all runs",
+};
+const label = (col) => COLUMN_LABELS[col] || pretty(col);
+const ROWS_SHOWN = 7;
+
+function tableHTML(q, rows) {
+  return `<div class="scroll-x"><table class="data"><thead><tr>${q.columns.map((c) => `<th>${esc(label(c))}</th>`).join("")}</tr></thead><tbody>` +
+    rows.map((r) => `<tr>${r.map((v, j) => {
+      const long = typeof v === "string" && v.length > 40;
+      return `<td${long ? ` class="clip" title="${esc(v)}"` : ""}>${cellHTML(q.columns[j], v)}</td>`;
+    }).join("")}</tr>`).join("") + "</tbody></table></div>";
+}
+
 async function initInsights() {
   const [report, alerts] = await Promise.all([load(FILES.sqlReport, "json"), load(FILES.alerts, "json")]);
   renderAlerts(alerts);
 
   if (!report) {
     $("insights-headline").textContent = "No SQL analysis yet.";
-    $("insights-sub").textContent = "The report is created after the next daily comparison runs.";
+    $("insights-sub").textContent = "It appears after the next daily comparison.";
     return;
   }
+  const updated = `Updated ${fmtTime(report.generated_at)}`;
   // Headline from the judge-bias query, when it has data
   const bias = (report.queries || []).find((q) => q.file.startsWith("01_") && q.status === "ok" && q.rows.length);
   if (bias) {
     const col = (name) => bias.columns.indexOf(name);
-    const get = (label) => bias.rows.find((r) => String(r[col("outcome")]).startsWith(label));
+    const get = (lbl) => bias.rows.find((r) => String(r[col("outcome")]).startsWith(lbl));
     const under = get("Judge under"), over = get("Judge over");
     const u = under ? under[col("translations")] : 0, o = over ? over[col("translations")] : 0;
     const missed = under ? under[col("of_which_missed_majors")] : 0;
-    $("insights-headline").textContent = u === o
-      ? "When the judge disagrees with the linguists, it under-calls and over-calls severity equally often."
-      : `When the judge disagrees with the linguists, it more often ${u > o ? "under-calls" : "over-calls"} severity.`;
-    $("insights-sub").textContent = `${u} under-calls and ${o} over-calls across all days so far` +
-      (missed ? `, including ${missed} missed major errors.` : ".") +
-      ` Generated ${fmtTime(report.generated_at)}. Every table below is one SQL query, and you can open its exact code.`;
+    $("insights-headline").textContent = u === o ? "The judge's errors are balanced"
+      : `The judge mostly ${u > o ? "under-calls" : "over-calls"} severity`;
+    $("insights-sub").textContent = `${u} under-calls · ${o} over-calls` +
+      (missed ? ` · ${missed} missed majors` : "") + ` · ${updated}`;
   } else {
-    $("insights-headline").textContent = "SQL analysis of all evaluation results.";
-    $("insights-sub").textContent = `Generated ${fmtTime(report.generated_at)}. Every table below is one SQL query, and you can open its exact code.`;
+    $("insights-headline").textContent = "SQL analysis";
+    $("insights-sub").textContent = updated;
   }
 
-  $("queries").innerHTML = (report.queries || []).map((q, i) => {
+  $("queries").innerHTML = (report.queries || []).map((q) => {
     let body;
     if (q.status !== "ok") body = `<p class="empty">${esc(q.message)}</p>`;
-    else if (!q.rows.length) body = `<p class="empty">The query returned no rows.</p>`;
-    else body = `<div class="scroll-x"><table class="data"><thead><tr>${q.columns.map((c) => `<th>${esc(pretty(c))}</th>`).join("")}</tr></thead><tbody>` +
-      q.rows.map((r) => `<tr>${r.map((v, j) => `<td>${cellHTML(q.columns[j], v)}</td>`).join("")}</tr>`).join("") + "</tbody></table></div>";
+    else if (!q.rows.length) body = `<p class="empty">No data yet.</p>`;
+    else {
+      body = tableHTML(q, q.rows.slice(0, ROWS_SHOWN));
+      if (q.rows.length > ROWS_SHOWN)
+        body += `<details class="more"><summary>Show ${q.rows.length - ROWS_SHOWN} more rows</summary>${tableHTML(q, q.rows.slice(ROWS_SHOWN))}</details>`;
+    }
     const link = repoLink(`analysis/queries/${q.file}`);
-    return `<h2>${esc(q.title)}</h2><p class="help">${esc(q.question)}</p>${body}
-      <details class="sql" data-file="${esc(q.file)}"><summary>Show the SQL (${esc(q.file)})</summary><pre>Loading…</pre>
-      ${link ? `<p class="help"><a href="${esc(link)}">View this query on GitHub</a></p>` : ""}</details>`;
+    return `<h2>${esc(q.title)}</h2>${q.question ? `<p class="help">${esc(q.question)}</p>` : ""}${body}
+      <details class="sql" data-file="${esc(q.file)}"><summary>View SQL</summary><pre>Loading…</pre>
+      ${link ? `<p class="help"><a href="${esc(link)}">Open on GitHub</a></p>` : ""}</details>`;
   }).join("");
 
   $("queries").querySelectorAll("details.sql").forEach((d) => {
@@ -816,8 +842,8 @@ async function initInsights() {
       if (!d.open || d.dataset.loaded) return;
       try {
         const res = await fetch(FILES.sqlQuery(d.dataset.file), { cache: "no-store" });
-        d.querySelector("pre").textContent = res.ok ? await res.text() : "Couldn't load this query file.";
-      } catch { d.querySelector("pre").textContent = "Couldn't load this query file."; }
+        d.querySelector("pre").textContent = res.ok ? await res.text() : "Couldn't load this query.";
+      } catch { d.querySelector("pre").textContent = "Couldn't load this query."; }
       d.dataset.loaded = "1";
     });
   });
@@ -832,13 +858,12 @@ function renderAlerts(alerts) {
   const stateInfo = {
     firing: { cls: "rejected", label: "Firing" },
     passing: { cls: "promoted", label: "Passing" },
-    no_data: { cls: "neutral", label: "Not enough data" },
+    no_data: { cls: "neutral", label: "No data" },
   };
-  $("alert-table").innerHTML = `<table class="data"><thead><tr><th>Rule</th><th>Status</th><th>Detail</th><th>Issue</th></tr></thead><tbody>` +
+  $("alert-table").innerHTML = `<table class="data"><thead><tr><th>Alert</th><th>Status</th><th>Latest</th></tr></thead><tbody>` +
     rules.map(([id, r]) => {
       const st = stateInfo[r.state] || stateInfo.no_data;
-      return `<tr><td>${esc(r.name)}</td><td><span class="pill ${st.cls}">${st.label}</span></td><td>${esc(r.detail)}</td>
-        <td>${r.issue_url ? `<a href="${esc(r.issue_url)}">Open issue</a>` : ""}</td></tr>`;
+      return `<tr><td>${esc(r.name)}</td><td><span class="pill ${st.cls}">${st.label}</span>${r.issue_url ? ` <a href="${esc(r.issue_url)}">Issue</a>` : ""}</td><td>${esc(r.detail)}</td></tr>`;
     }).join("") + "</tbody></table>";
 
   const firing = rules.filter(([, r]) => r.state === "firing");

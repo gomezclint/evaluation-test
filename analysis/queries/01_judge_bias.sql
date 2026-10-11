@@ -1,5 +1,5 @@
--- Title: Judge bias across all days
--- Question: When the judge disagrees with the linguists, does it tend to under-call or over-call severity?
+-- Title: Judge bias
+-- Question: When the judge disagrees with linguists, does it under-call or over-call severity?
 -- Requires: daily_results
 WITH scored AS (
   SELECT

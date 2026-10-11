@@ -1,5 +1,5 @@
--- Title: Daily agreement vs. its 7-day baseline
--- Question: Is each day's weighted kappa in line with the median of the 7 days before it? (The drop alert uses this logic.)
+-- Title: Kappa vs. 7-day median
+-- Question: Is each day's agreement in line with the week before? The drop alert uses this.
 -- Requires: daily_history
 WITH kappa AS (
   SELECT date, weighted_kappa AS value FROM daily_history WHERE weighted_kappa IS NOT NULL

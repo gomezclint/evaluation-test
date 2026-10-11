@@ -1,5 +1,5 @@
--- Title: Judge recall by risk category
--- Question: For each business-risk category, how many critical golden items does the judge catch, and did the latest prompt version help or hurt?
+-- Title: Recall by risk category
+-- Question: Which risk categories does the judge miss, and did the latest prompt help?
 -- Requires: regression_items
 WITH runs AS (                        -- every regression run, newest first
   SELECT DISTINCT run FROM regression_items
