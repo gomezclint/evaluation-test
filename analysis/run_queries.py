@@ -47,8 +47,9 @@ for path in QUERIES:
     sql = path.read_text(encoding="utf-8")
     title = header(sql, "Title") or path.stem
     question = header(sql, "Question")
+    empty = header(sql, "Empty") or "No rows."
     entry = {"file": path.name, "title": title, "question": question, "status": "ok",
-             "columns": [], "rows": [], "message": ""}
+             "columns": [], "rows": [], "message": "", "empty": empty}
     results.append(entry)
     lines += [f"## {title}", "", f"*{question}*", "", f"Query: `{path.name}`", ""]
     required = [t.strip() for t in header(sql, "Requires").split(",") if t.strip()]
@@ -62,7 +63,7 @@ for path in QUERIES:
         rows = cur.fetchall()
         columns = [d[0] for d in cur.description]
         entry.update(columns=columns, rows=[list(r) for r in rows])
-        lines += [markdown_table(columns, rows) if rows else "The query returned no rows.", ""]
+        lines += [markdown_table(columns, rows) if rows else empty, ""]
     except Exception as err:  # report the problem, keep running the other queries
         entry.update(status="error", message=f"This query failed: {err}")
         lines += [f"This query failed: `{err}`", ""]

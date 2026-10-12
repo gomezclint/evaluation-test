@@ -825,7 +825,7 @@ async function initInsights() {
   $("queries").innerHTML = (report.queries || []).map((q) => {
     let body;
     if (q.status !== "ok") body = `<p class="empty">${esc(q.message)}</p>`;
-    else if (!q.rows.length) body = `<p class="empty">No data yet.</p>`;
+    else if (!q.rows.length) body = `<p class="empty">${esc(q.empty || "No rows.")}</p>`;
     else {
       body = tableHTML(q, q.rows.slice(0, ROWS_SHOWN));
       if (q.rows.length > ROWS_SHOWN)

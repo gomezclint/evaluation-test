@@ -1,6 +1,7 @@
 -- Title: Hardest golden items
 -- Question: Which golden items do prompt versions get wrong most often?
 -- Requires: regression_items
+-- Empty: Good news: no golden item has been missed in any run so far.
 SELECT
   id,
   MAX(translation_de) AS translation,
