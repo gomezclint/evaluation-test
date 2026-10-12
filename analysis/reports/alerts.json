@@ -2,32 +2,32 @@
   "rules": {
     "freshness": {
       "name": "No fresh daily results",
-      "detail": "Latest results: 2026-10-11.",
+      "detail": "Latest results: 2026-10-12.",
       "state": "passing",
       "issue_url": null,
-      "checked_at": "2026-10-11T07:14:20+00:00"
+      "checked_at": "2026-10-12T02:41:51+00:00"
     },
     "kappa_floor": {
       "name": "Weighted kappa below floor",
-      "detail": "2026-10-11: kappa 0.47 (floor 0.40).",
-      "state": "passing",
-      "issue_url": null,
-      "checked_at": "2026-10-11T04:18:56+00:00"
+      "detail": "2026-10-12: kappa 0.36, below floor 0.40.",
+      "state": "firing",
+      "issue_url": "https://github.com/gomezclint/evaluation-test/issues/5",
+      "checked_at": "2026-10-12T02:41:52+00:00"
     },
     "major_recall": {
       "name": "Major errors under-called",
-      "detail": "2026-10-11: 1 of 3 majors caught (recall 0.33, floor 0.60).",
-      "state": "firing",
-      "issue_url": "https://github.com/gomezclint/evaluation-test/issues/1",
-      "checked_at": "2026-10-11T04:18:57+00:00"
+      "detail": "Only 2 major error(s) on the latest day (need 3).",
+      "state": "no_data",
+      "issue_url": null,
+      "checked_at": "2026-10-12T02:41:52+00:00"
     },
     "kappa_drop": {
       "name": "Sudden drop in agreement",
-      "detail": "2026-10-11: kappa 0.47 vs. 7-day median 0.43.",
+      "detail": "2026-10-12: kappa 0.36 vs. 7-day median 0.45.",
       "state": "passing",
       "issue_url": null,
-      "checked_at": "2026-10-11T04:18:57+00:00"
+      "checked_at": "2026-10-12T02:41:52+00:00"
     }
   },
-  "checked_at": "2026-10-11T07:14:20+00:00"
+  "checked_at": "2026-10-12T02:41:52+00:00"
 }

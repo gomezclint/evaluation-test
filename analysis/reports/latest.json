@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-10-11T04:18:57+00:00",
+  "generated_at": "2026-10-12T02:41:52+00:00",
   "tables_loaded": {
-    "daily_history": 9,
-    "daily_results": 169,
+    "daily_history": 10,
+    "daily_results": 189,
     "regression_history": 6,
     "regression_items": 156
   },
@@ -21,24 +21,25 @@
       "rows": [
         [
           "Agreed",
-          80,
-          47.3,
+          92,
+          48.7,
           0
         ],
         [
           "Judge over-called severity",
-          55,
-          32.5,
+          60,
+          31.7,
           0
         ],
         [
           "Judge under-called severity",
-          34,
-          20.1,
-          11
+          37,
+          19.6,
+          12
         ]
       ],
-      "message": ""
+      "message": "",
+      "empty": "No rows."
     },
     {
       "file": "02_weekly_trend.sql",
@@ -54,6 +55,14 @@
         "lowest_weighted_kappa"
       ],
       "rows": [
+        [
+          "2026-10-12",
+          1,
+          0.6,
+          0.52,
+          0.36,
+          0.36
+        ],
         [
           "2026-10-05",
           7,
@@ -71,7 +80,8 @@
           null
         ]
       ],
-      "message": ""
+      "message": "",
+      "empty": "No rows."
     },
     {
       "file": "03_rolling_baseline.sql",
@@ -86,6 +96,13 @@
         "days_in_window"
       ],
       "rows": [
+        [
+          "2026-10-12",
+          0.36,
+          0.45,
+          -0.09,
+          6
+        ],
         [
           "2026-10-11",
           0.47,
@@ -129,7 +146,8 @@
           null
         ]
       ],
-      "message": ""
+      "message": "",
+      "empty": "No rows."
     },
     {
       "file": "04_hardest_golden_items.sql",
@@ -147,7 +165,8 @@
         "false_alarm"
       ],
       "rows": [],
-      "message": ""
+      "message": "",
+      "empty": "Good news: no golden item has been missed in any run so far."
     },
     {
       "file": "05_recall_by_category.sql",
@@ -204,7 +223,8 @@
           100.0
         ]
       ],
-      "message": ""
+      "message": "",
+      "empty": "No rows."
     }
   ]
 }

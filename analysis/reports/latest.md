@@ -1,8 +1,8 @@
 # SQL analysis report
 
-Generated 2026-10-11 04:18 UTC from the repository's result files. Each section is one query in `analysis/queries/`.
+Generated 2026-10-12 02:41 UTC from the repository's result files. Each section is one query in `analysis/queries/`.
 
-Tables loaded: `daily_history` (9 rows), `daily_results` (169 rows), `regression_history` (6 rows), `regression_items` (156 rows)
+Tables loaded: `daily_history` (10 rows), `daily_results` (189 rows), `regression_history` (6 rows), `regression_items` (156 rows)
 
 ## Judge bias
 
@@ -12,9 +12,9 @@ Query: `01_judge_bias.sql`
 
 | outcome | translations | percent | of_which_missed_majors |
 |---|---|---|---|
-| Agreed | 80 | 47.3 | 0 |
-| Judge over-called severity | 55 | 32.5 | 0 |
-| Judge under-called severity | 34 | 20.1 | 11 |
+| Agreed | 92 | 48.7 | 0 |
+| Judge over-called severity | 60 | 31.7 | 0 |
+| Judge under-called severity | 37 | 19.6 | 12 |
 
 ## Weekly trend
 
@@ -24,6 +24,7 @@ Query: `02_weekly_trend.sql`
 
 | week_starting | days | avg_accuracy | avg_macro_f1 | avg_weighted_kappa | lowest_weighted_kappa |
 |---|---|---|---|---|---|
+| 2026-10-12 | 1 | 0.6 | 0.52 | 0.36 | 0.36 |
 | 2026-10-05 | 7 | 0.47 | 0.39 | 0.35 | -0.08 |
 | 2026-09-28 | 2 | 0.45 | 0.35 |  |  |
 
@@ -35,6 +36,7 @@ Query: `03_rolling_baseline.sql`
 
 | date | weighted_kappa | median_prior_7_days | difference | days_in_window |
 |---|---|---|---|---|
+| 2026-10-12 | 0.36 | 0.45 | -0.09 | 6 |
 | 2026-10-11 | 0.47 | 0.43 | 0.04 | 5 |
 | 2026-10-10 | 0.43 | 0.36 | 0.07 | 4 |
 | 2026-10-09 | 0.26 | 0.46 | -0.2 | 3 |
@@ -48,7 +50,7 @@ Query: `03_rolling_baseline.sql`
 
 Query: `04_hardest_golden_items.sql`
 
-The query returned no rows.
+Good news: no golden item has been missed in any run so far.
 
 ## Recall by risk category
 
