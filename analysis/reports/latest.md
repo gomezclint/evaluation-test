@@ -1,8 +1,8 @@
 # SQL analysis report
 
-Generated 2026-10-17 04:26 UTC from the repository's result files. Each section is one query in `analysis/queries/`.
+Generated 2026-10-18 04:27 UTC from the repository's result files. Each section is one query in `analysis/queries/`.
 
-Tables loaded: `daily_history` (15 rows), `daily_results` (289 rows), `regression_history` (6 rows), `regression_items` (156 rows)
+Tables loaded: `daily_history` (16 rows), `daily_results` (309 rows), `regression_history` (6 rows), `regression_items` (156 rows)
 
 ## Judge bias
 
@@ -12,9 +12,9 @@ Query: `01_judge_bias.sql`
 
 | outcome | translations | percent | of_which_missed_majors |
 |---|---|---|---|
-| Agreed | 147 | 50.9 | 0 |
-| Judge over-called severity | 95 | 32.9 | 0 |
-| Judge under-called severity | 47 | 16.3 | 15 |
+| Agreed | 159 | 51.5 | 0 |
+| Judge over-called severity | 101 | 32.7 | 0 |
+| Judge under-called severity | 49 | 15.9 | 15 |
 
 ## Weekly trend
 
@@ -24,7 +24,7 @@ Query: `02_weekly_trend.sql`
 
 | week_starting | days | avg_accuracy | avg_macro_f1 | avg_weighted_kappa | lowest_weighted_kappa |
 |---|---|---|---|---|---|
-| 2026-10-12 | 6 | 0.56 | 0.44 | 0.29 | -0.13 |
+| 2026-10-12 | 7 | 0.56 | 0.46 | 0.27 | -0.13 |
 | 2026-10-05 | 7 | 0.47 | 0.39 | 0.35 | -0.08 |
 | 2026-09-28 | 2 | 0.45 | 0.35 |  |  |
 
@@ -36,6 +36,7 @@ Query: `03_rolling_baseline.sql`
 
 | date | weighted_kappa | median_prior_7_days | difference | days_in_window |
 |---|---|---|---|---|
+| 2026-10-18 | 0.16 | 0.35 | -0.19 | 7 |
 | 2026-10-17 | 0.25 | 0.43 | -0.18 | 7 |
 | 2026-10-16 | -0.13 | 0.43 | -0.56 | 7 |
 | 2026-10-15 | 0.66 | 0.43 | 0.23 | 7 |
