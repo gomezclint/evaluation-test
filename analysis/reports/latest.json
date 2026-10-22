@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-10-21T04:31:50+00:00",
+  "generated_at": "2026-10-22T04:31:26+00:00",
   "tables_loaded": {
-    "daily_history": 19,
-    "daily_results": 368,
+    "daily_history": 20,
+    "daily_results": 388,
     "regression_history": 6,
     "regression_items": 156
   },
@@ -21,21 +21,21 @@
       "rows": [
         [
           "Agreed",
-          185,
-          50.3,
+          199,
+          51.3,
           0
         ],
         [
           "Judge over-called severity",
-          123,
-          33.4,
+          127,
+          32.7,
           0
         ],
         [
           "Judge under-called severity",
-          60,
-          16.3,
-          21
+          62,
+          16.0,
+          23
         ]
       ],
       "message": "",
@@ -57,9 +57,9 @@
       "rows": [
         [
           "2026-10-19",
-          3,
-          0.44,
-          0.28,
+          4,
+          0.51,
+          0.35,
           0.32,
           0.2
         ],
@@ -104,6 +104,13 @@
         "days_in_window"
       ],
       "rows": [
+        [
+          "2026-10-22",
+          0.3,
+          0.25,
+          0.05,
+          7
+        ],
         [
           "2026-10-21",
           0.2,
@@ -194,13 +201,6 @@
           0.46,
           -0.2,
           3
-        ],
-        [
-          "2026-10-08",
-          0.46,
-          0.25,
-          0.21,
-          2
         ]
       ],
       "message": "",
