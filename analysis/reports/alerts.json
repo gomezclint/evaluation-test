@@ -5,7 +5,7 @@
       "detail": "Latest results: 2026-10-29.",
       "state": "passing",
       "issue_url": null,
-      "checked_at": "2026-10-29T04:44:59+00:00"
+      "checked_at": "2026-10-29T07:53:58+00:00"
     },
     "kappa_floor": {
       "name": "Weighted kappa below floor",
@@ -29,5 +29,5 @@
       "checked_at": "2026-10-29T04:45:04+00:00"
     }
   },
-  "checked_at": "2026-10-29T04:45:04+00:00"
+  "checked_at": "2026-10-29T07:53:58+00:00"
 }
