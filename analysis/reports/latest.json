@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-11-15T11:52:55+00:00",
+  "generated_at": "2026-11-16T12:37:17+00:00",
   "tables_loaded": {
-    "daily_history": 44,
-    "daily_results": 862,
+    "daily_history": 45,
+    "daily_results": 882,
     "regression_history": 6,
     "regression_items": 156
   },
@@ -21,20 +21,20 @@
       "rows": [
         [
           "Agreed",
-          475,
-          55.1,
+          483,
+          54.8,
           0
         ],
         [
           "Judge over-called severity",
-          261,
-          30.3,
+          272,
+          30.8,
           0
         ],
         [
           "Judge under-called severity",
-          126,
-          14.6,
+          127,
+          14.4,
           51
         ]
       ],
@@ -55,6 +55,14 @@
         "lowest_weighted_kappa"
       ],
       "rows": [
+        [
+          "2026-11-16",
+          1,
+          0.4,
+          0.33,
+          0.19,
+          0.19
+        ],
         [
           "2026-11-09",
           7,
@@ -128,6 +136,13 @@
         "days_in_window"
       ],
       "rows": [
+        [
+          "2026-11-16",
+          0.19,
+          0.43,
+          -0.24,
+          7
+        ],
         [
           "2026-11-15",
           0.43,
@@ -217,13 +232,6 @@
           0.38,
           0.47,
           -0.09,
-          7
-        ],
-        [
-          "2026-11-02",
-          0.71,
-          0.47,
-          0.24,
           7
         ]
       ],
