@@ -2,32 +2,32 @@
   "rules": {
     "freshness": {
       "name": "No fresh daily results",
-      "detail": "Latest results: 2026-11-16.",
+      "detail": "Latest results: 2026-11-17.",
       "state": "passing",
       "issue_url": null,
-      "checked_at": "2026-11-16T16:50:08+00:00"
+      "checked_at": "2026-11-17T13:03:56+00:00"
     },
     "kappa_floor": {
       "name": "Weighted kappa below floor",
-      "detail": "2026-11-16: kappa 0.19, below floor 0.40.",
+      "detail": "2026-11-17: kappa 0.22, below floor 0.40.",
       "state": "firing",
       "issue_url": "https://github.com/gomezclint/evaluation-test/issues/19",
-      "checked_at": "2026-11-16T12:37:16+00:00"
+      "checked_at": "2026-11-17T13:03:57+00:00"
     },
     "major_recall": {
       "name": "Major errors under-called",
-      "detail": "Only 0 major error(s) on the latest day (need 3).",
+      "detail": "Only 2 major error(s) on the latest day (need 3).",
       "state": "no_data",
       "issue_url": null,
-      "checked_at": "2026-11-16T12:37:16+00:00"
+      "checked_at": "2026-11-17T13:03:57+00:00"
     },
     "kappa_drop": {
       "name": "Sudden drop in agreement",
-      "detail": "2026-11-16: kappa 0.19 vs. 7-day median 0.43, a drop of 0.24 (limit 0.15).",
+      "detail": "2026-11-17: kappa 0.22 vs. 7-day median 0.43, a drop of 0.21 (limit 0.15).",
       "state": "firing",
       "issue_url": "https://github.com/gomezclint/evaluation-test/issues/20",
-      "checked_at": "2026-11-16T12:37:17+00:00"
+      "checked_at": "2026-11-17T13:03:58+00:00"
     }
   },
-  "checked_at": "2026-11-16T16:50:08+00:00"
+  "checked_at": "2026-11-17T13:03:58+00:00"
 }
